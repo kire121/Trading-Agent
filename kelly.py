@@ -110,5 +110,5 @@ class KellyPositionSizer:
         
         if max_position is not None:
             position_size = min(position_size, max_position)
-            
+
         return position_size
