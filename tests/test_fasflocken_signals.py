@@ -43,11 +43,28 @@ def test_causal_bandpass_long_gap_poisons_rest_of_segment():
     x[230:350] = np.random.default_rng(3).normal(size=120)
     y = causal_bandpass(x, 5, 20, max_gap=5)
 
-    # bridged for max_gap samples past the last valid point (150..154), then
-    # the unbridged center of the gap poisons sosfilt's IIR state for good --
-    # including the later, otherwise-valid 230:350 stretch of the same segment.
-    assert not np.isnan(y[50:155]).any()
-    assert np.isnan(y[160:350]).all()
+    # the 80-day run [150, 229] exceeds max_gap and is left entirely NaN (no
+    # partial edge-bridging), so sosfilt's IIR state poisons from the first
+    # NaN at 150 onward -- including the later, otherwise-valid 230:350
+    # stretch of the same segment.
+    assert not np.isnan(y[50:150]).any()
+    assert np.isnan(y[150:350]).all()
+
+
+def test_causal_bandpass_gap_fill_never_uses_future_data():
+    """A halt-day gap bridged near the *edge* of the causally-available
+    history must not change when future data (beyond that edge) arrives --
+    the classic failure mode of linear interpolation, which anchors on the
+    next valid point regardless of how far away "next" is in calendar time.
+    """
+    rng = np.random.default_rng(4)
+    x = rng.normal(size=120)
+    x[100] = np.nan  # single-day halt, 19 samples from the end of this slice
+
+    y_short = causal_bandpass(x, 5, 20, max_gap=5)
+    x_extended = np.concatenate([x, rng.normal(size=50)])
+    y_long = causal_bandpass(x_extended, 5, 20, max_gap=5)
+    assert np.allclose(y_short, y_long[: len(x)], equal_nan=True)
 
 
 def test_rolling_analytic_phase_matches_direct_hilbert_on_window():

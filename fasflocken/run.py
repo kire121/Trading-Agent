@@ -21,7 +21,14 @@ import datetime as _dt
 
 from fasflocken.config import DEFAULT_PARAMS, GICS_SECTORS
 from fasflocken.universe import SyntheticUniverseProvider
-from fasflocken.backtest import run_backtest, annualized_sharpe, annualized_return, annualized_vol, max_drawdown
+from fasflocken.backtest import (
+    run_backtest,
+    annualized_sharpe,
+    annualized_return,
+    annualized_vol,
+    max_drawdown,
+    since,
+)
 from fasflocken.pipeline import compute_sector_signal, build_z_panel
 from fasflocken import stats
 from fasflocken import grid_search
@@ -39,13 +46,16 @@ def cmd_demo(args) -> None:
     sectors = tuple(list(GICS_SECTORS)[: args.n_sectors])
     provider = _demo_provider(args.start, args.end, args.seed, args.n_per_sector, sectors)
     bt = run_backtest(provider, args.start, args.end, DEFAULT_PARAMS, sectors=sectors)
+    r = since(bt.weekly_returns, args.eval_start)
 
     print(f"Fasflocken demo backtest ({args.start} .. {args.end}), {len(sectors)} sectors, synthetic data")
-    print(f"  weeks traded        : {len(bt.weekly_returns)}")
-    print(f"  Sharpe (net, ann.)   : {annualized_sharpe(bt.weekly_returns):.3f}")
-    print(f"  Return (ann.)        : {annualized_return(bt.weekly_returns):.3%}")
-    print(f"  Vol (ann.)           : {annualized_vol(bt.weekly_returns):.3%}")
-    print(f"  Max drawdown (cum lr): {max_drawdown(bt.weekly_returns):.3%}")
+    if args.eval_start:
+        print(f"  (performance stats from {args.eval_start} onward, excluding burn-in)")
+    print(f"  weeks traded        : {len(r)}")
+    print(f"  Sharpe (net, ann.)   : {annualized_sharpe(r):.3f}")
+    print(f"  Return (ann.)        : {annualized_return(r):.3%}")
+    print(f"  Vol (ann.)           : {annualized_vol(r):.3%}")
+    print(f"  Max drawdown (cum lr): {max_drawdown(r):.3%}")
     print(f"  Avg weekly turnover  : {bt.turnover.mean():.3f}")
     print(f"  Avg vol-target k     : {bt.k_scale.mean():.3f}")
 
@@ -57,23 +67,28 @@ def cmd_grid(args) -> None:
     def _progress(row):
         print(f"  cell {row['cell_id']:<28} sharpe={row['sharpe']:.3f}")
 
-    result = grid_search.run_grid(provider, args.start, args.end, sectors=sectors, progress=_progress if args.verbose else None)
+    result = grid_search.run_grid(
+        provider, args.start, args.end, sectors=sectors, progress=_progress if args.verbose else None,
+        eval_start=args.eval_start,
+    )
     print(result.results.sort_values("sharpe", ascending=False).to_string(index=False))
 
 
 def cmd_full(args) -> None:
     sectors = tuple(list(GICS_SECTORS)[: args.n_sectors])
     provider = _demo_provider(args.start, args.end, args.seed, args.n_per_sector, sectors)
+    eval_start = args.eval_start
 
     print("1/6 computing sector signals (default grid cell)...")
     sector_signals = {s: compute_sector_signal(provider, s, args.start, args.end, DEFAULT_PARAMS) for s in sectors}
     z_panel = build_z_panel(sector_signals)
     main = run_backtest(provider, args.start, args.end, DEFAULT_PARAMS, sectors=sectors, z_override=z_panel)
-    print(f"    net Sharpe = {annualized_sharpe(main.weekly_returns):.3f}")
+    main_returns = since(main.weekly_returns, eval_start)
+    print(f"    net Sharpe = {annualized_sharpe(main_returns):.3f}")
 
     print("2/6 running declared grid...")
-    grid = grid_search.run_grid(provider, args.start, args.end, sectors=sectors)
-    trial_sharpes = grid.results["sharpe"].to_numpy()
+    grid = grid_search.run_grid(provider, args.start, args.end, sectors=sectors, eval_start=eval_start)
+    trial_sharpes = grid.results["sharpe"].to_numpy()  # annualized -- see stats.deflated_sharpe_ratio's docstring
 
     print("3/6 circular block bootstrap (this is the slow one)...")
     boot = stats.circular_block_bootstrap_pvalue(
@@ -83,13 +98,14 @@ def cmd_full(args) -> None:
 
     print("4/6 boring-twin comparison...")
     twin = stats.run_twin_backtest(provider, args.start, args.end, DEFAULT_PARAMS, sectors=sectors, sector_signals=sector_signals)
-    delta_sr = stats.delta_sharpe_vs_twin(main, twin)
+    twin_returns = since(twin.weekly_returns, eval_start)
+    delta_sr = annualized_sharpe(main_returns) - annualized_sharpe(twin_returns)
     print(f"    delta Sharpe vs twin = {delta_sr:.3f}")
 
     print("5/6 oracle cap + sign stability + DSR...")
-    oracle_ret = stats.oracle_backtest(provider, args.start, args.end, n_legs=DEFAULT_PARAMS.n_legs, sectors=sectors)
-    dsr = stats.deflated_sharpe_ratio(main.weekly_returns, trial_sharpes)
-    sign = stats.sign_stability(main.weekly_returns)
+    oracle_ret = since(stats.oracle_backtest(provider, args.start, args.end, n_legs=DEFAULT_PARAMS.n_legs, sectors=sectors), eval_start)
+    dsr = stats.deflated_sharpe_ratio(main_returns, trial_sharpes)
+    sign = stats.sign_stability(main_returns)
     print(f"    oracle Sharpe        = {annualized_sharpe(oracle_ret):.3f}")
     print(f"    DSR gap              = {dsr['deflated_sharpe_gap']:.3f} (psr={dsr['psr']:.4f})")
     print(f"    sign stable          = {sign['sign_stable']}")
@@ -117,6 +133,11 @@ def _common_args_parser() -> argparse.ArgumentParser:
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--start", type=_parse_date, default=_dt.date(2015, 1, 1))
     common.add_argument("--end", type=_parse_date, default=_dt.date(2019, 12, 31))
+    common.add_argument(
+        "--eval-start", type=_parse_date, default=None,
+        help="only compute performance stats (Sharpe/DSR/etc.) from this date onward, excluding an earlier "
+             "burn-in period included in --start; defaults to --start (no slicing)",
+    )
     common.add_argument("--seed", type=int, default=7)
     common.add_argument("--n-per-sector", type=int, default=20)
     common.add_argument("--n-sectors", type=int, default=9, help="use the first N of the 11 GICS sectors (default 9, always-on)")

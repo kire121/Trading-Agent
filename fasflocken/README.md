@@ -120,7 +120,14 @@ grid, null-hypothesis suite -- is unchanged; they only depend on the
 `sector_etf_prices`, `trading_calendar`).
 
 For an actual 2004-2026 run: burn-in from 2002, IS 2004-2017, OOS
-2018-2026 (`config.SAMPLE_WINDOW`). The full 81-cell grid at 500-name
+2018-2026 (`config.SAMPLE_WINDOW`). Running the backtest with `start=2002`
+so the Z-score has real history produces real weeks of forced-zero return
+before the first trade (see `backtest.since`'s docstring) -- slice the
+resulting weekly-return series with `backtest.since(returns,
+eval_start=2004-01-01)` (or pass `eval_start=` to `grid_search.run_grid`,
+or `--eval-start` on the CLI) before computing Sharpe/DSR/etc., so
+performance stats reflect the true evaluation window, not diluted by
+those burn-in weeks. The full 81-cell grid at 500-name
 scale is expensive (`grid_search.run_grid` amortizes the Hilbert pipeline
 to 9 calls instead of 81 by caching R_s(t)/Corr_s(t) per band/window and
 only re-deriving Z_s per z-lookback, but the O(N) rolling-Hilbert step

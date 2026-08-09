@@ -47,6 +47,7 @@ from fasflocken.config import (
     DEFAULT_COSTS,
     VOL_TARGET_ANN,
     MAX_GROSS,
+    WEEKS_PER_YEAR,
 )
 from fasflocken.backtest import (
     BacktestResult,
@@ -362,21 +363,38 @@ def expected_max_sharpe(sharpe_std_across_trials: float, n_trials: int) -> float
     )
 
 
-def deflated_sharpe_ratio(weekly_returns: pd.Series, trial_sharpes: np.ndarray) -> dict:
+def deflated_sharpe_ratio(
+    weekly_returns: pd.Series, trial_sharpes: np.ndarray, periods_per_year: int = WEEKS_PER_YEAR
+) -> dict:
     """Bailey & Lopez de Prado (2014) PSR/DSR, using this trial's own return
     moments and the empirical spread of Sharpe ratios across the declared
     grid (`trial_sharpes`) to estimate the expected maximum Sharpe you'd
     see from that many trials under a true-zero-skill null.
 
+    The PSR/DSR formula (the skew/kurtosis correction terms and the
+    sqrt(n_obs - 1) scaling in particular) is derived for the *periodic*
+    Sharpe ratio -- i.e. the same frequency as the return observations
+    feeding it, weekly here -- not an annualized one. `trial_sharpes` is,
+    by convention everywhere else in this codebase (grid_search.py,
+    run.py), a set of *annualized* Sharpes, so it's converted back to the
+    weekly scale (divide by sqrt(periods_per_year)) before use; this is
+    exactly the inverse of how those trial Sharpes were annualized in the
+    first place, so it's lossless. All internal math (sr, sr0, psr) runs
+    on the periodic scale; `sharpe`, `sharpe0_expected_max` and
+    `deflated_sharpe_gap` are then reported back in annualized units
+    (a fixed sqrt(periods_per_year) rescaling, consistent with
+    backtest.annualized_sharpe) so they're directly comparable to every
+    other Sharpe figure this package prints.
+
     Returns both:
       * `psr` -- the standard [0,1] probabilistic DSR (P(true SR > 0) after
         deflation); and
-      * `deflated_sharpe_gap` -- observed_sharpe - expected_max_sharpe, a
-        Sharpe-ratio-scaled quantity that is negative when the observed
-        Sharpe fails to clear what pure multiple-testing luck would
-        produce. The spec's rejection rule "DSR <= 0" is evaluated on this
-        gap (see grid_search.evaluate_rejection), since a probability can
-        never be <= 0 in a meaningful way.
+      * `deflated_sharpe_gap` -- observed_sharpe - expected_max_sharpe (both
+        annualized), a Sharpe-ratio-scaled quantity that is negative when
+        the observed Sharpe fails to clear what pure multiple-testing luck
+        would produce. The spec's rejection rule "DSR <= 0" is evaluated
+        on this gap (see grid_search.evaluate_rejection), since a
+        probability can never be <= 0 in a meaningful way.
     """
     r = weekly_returns.dropna().to_numpy(dtype=float)
     n = len(r)
@@ -387,23 +405,25 @@ def deflated_sharpe_ratio(weekly_returns: pd.Series, trial_sharpes: np.ndarray) 
             "n_obs": n, "n_trials": len(trial_sharpes),
         }
 
-    sr = float(r.mean() / r.std(ddof=1))
+    ann_factor = np.sqrt(periods_per_year)
+    sr = float(r.mean() / r.std(ddof=1))  # periodic (weekly) Sharpe -- what the PSR formula expects
     skew = float(pd.Series(r).skew())
     kurtosis = float(pd.Series(r).kurtosis()) + 3.0  # pandas reports excess kurtosis; formula wants raw kurtosis
 
     valid_trials = trial_sharpes[~np.isnan(trial_sharpes)] if len(trial_sharpes) else np.array([])
-    sharpe_std = float(np.std(valid_trials, ddof=1)) if len(valid_trials) > 1 else 0.0
-    n_trials = max(len(valid_trials), 1)
-    sr0 = expected_max_sharpe(sharpe_std, n_trials)
+    valid_trials_periodic = valid_trials / ann_factor  # de-annualize to match `sr`'s scale
+    sharpe_std = float(np.std(valid_trials_periodic, ddof=1)) if len(valid_trials_periodic) > 1 else 0.0
+    n_trials = max(len(valid_trials_periodic), 1)
+    sr0 = expected_max_sharpe(sharpe_std, n_trials)  # periodic scale
 
     denom = np.sqrt(max(1e-12, 1 - skew * sr + ((kurtosis - 1) / 4) * sr**2))
     psr = float(norm.cdf((sr - sr0) * np.sqrt(n - 1) / denom))
 
     return {
         "psr": psr,
-        "deflated_sharpe_gap": float(sr - sr0),
-        "sharpe": sr,
-        "sharpe0_expected_max": sr0,
+        "deflated_sharpe_gap": float((sr - sr0) * ann_factor),
+        "sharpe": sr * ann_factor,
+        "sharpe0_expected_max": sr0 * ann_factor,
         "skew": skew,
         "kurtosis": kurtosis,
         "n_obs": n,

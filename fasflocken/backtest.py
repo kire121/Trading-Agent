@@ -213,6 +213,23 @@ def annualized_vol(weekly_returns: pd.Series, periods_per_year: int = WEEKS_PER_
     return float(r.std(ddof=1) * np.sqrt(periods_per_year))
 
 
+def since(weekly_returns: pd.Series, eval_start: _dt.date | None) -> pd.Series:
+    """Slice a return series to dates >= eval_start.
+
+    Running with an early `start` (e.g. 2002 for burn-in, per
+    config.SAMPLE_WINDOW) intentionally produces weeks of forced-zero
+    return before enough Z-score history exists to trade. Those weeks are
+    real (not a bug -- see run_backtest's docstring), but must be excluded
+    before computing Sharpe/DSR/etc., or performance stats get diluted by
+    however many burn-in weeks happened to be in the sample -- unevenly so
+    across grid cells with different z_lookback_weeks. Pass eval_start=None
+    to skip slicing (whole series, unchanged).
+    """
+    if eval_start is None:
+        return weekly_returns
+    return weekly_returns.loc[weekly_returns.index >= pd.Timestamp(eval_start)]
+
+
 def max_drawdown(weekly_returns: pd.Series) -> float:
     r = weekly_returns.dropna()
     if len(r) == 0:

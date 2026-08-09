@@ -96,6 +96,29 @@ def test_deflated_sharpe_ratio_wider_trial_spread_lowers_gap():
     assert wide["deflated_sharpe_gap"] < narrow["deflated_sharpe_gap"]
 
 
+def test_deflated_sharpe_ratio_units_are_consistent_with_annualized_trial_sharpes():
+    """Regression test for a real bug: trial_sharpes is annualized (the
+    convention grid_search.py/run.py actually use), but the strategy's own
+    Sharpe used to be computed on raw weekly returns without annualizing --
+    an ~sqrt(52)x scale mismatch that made deflated_sharpe_gap strongly
+    negative regardless of actual skill. A strategy whose own weekly Sharpe
+    matches the annualized scale of its peer trials should get a gap of
+    modest size, not one dominated by that scale mismatch.
+    """
+    idx = pd.date_range("2020-01-03", periods=200, freq="W-FRI")
+    rng = np.random.default_rng(2)
+    weekly_sharpe_target = 0.17  # annualizes to ~1.23
+    vol = 0.02
+    r = pd.Series(rng.normal(weekly_sharpe_target * vol, vol, 200), index=idx)
+
+    trial_sharpes = np.array([0.9, 1.1, 1.0, 1.3, 0.8, 1.23, 1.05])  # annualized, comparable scale
+    result = stats.deflated_sharpe_ratio(r, trial_sharpes)
+
+    assert result["sharpe"] == pytest.approx(r.mean() / r.std(ddof=1) * np.sqrt(52))
+    assert abs(result["deflated_sharpe_gap"]) < 1.0  # not dominated by a ~7.2x unit mismatch
+    assert result["psr"] > 0.01  # not vanishingly small purely from a units bug
+
+
 def test_sign_stability_detects_flip_and_consistency():
     idx = pd.date_range("2004-01-02", periods=1200, freq="W-FRI")
     consistent = pd.Series(0.001, index=idx)

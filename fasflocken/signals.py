@@ -47,6 +47,34 @@ def _design_bandpass_sos(low_period_days: float, high_period_days: float, order:
     return butter(order, [f_low, f_high], btype="bandpass", fs=fs, output="sos")
 
 
+def _bridge_short_gaps(segment: np.ndarray, max_gap: int) -> np.ndarray:
+    """Fill each maximal run of consecutive NaNs with 0.0 if (and only if)
+    that run's own length is <= max_gap; longer runs are left untouched.
+
+    Deliberately NOT linear interpolation: interpolating between the
+    values before and after a gap requires the value *after* it, which for
+    a gap sitting near the end of a rolling-window computation would be
+    tomorrow's data feeding into today's causal filter output. A constant
+    0.0 fill (read: "assume no price change on a halted trading day")
+    uses zero information from either side, so it can never leak a future
+    observation backward -- unlike pandas' `Series.interpolate(...,
+    limit=N)`, which still anchors on the next valid value even when
+    `limit_direction='forward'` is set, and whose `limit` is a *global*
+    per-series fill budget rather than a per-gap one.
+    """
+    out = segment.copy()
+    is_nan = np.isnan(out)
+    if not is_nan.any():
+        return out
+    edges = np.diff(np.concatenate(([0], is_nan.astype(np.int8), [0])))
+    starts = np.flatnonzero(edges == 1)
+    ends = np.flatnonzero(edges == -1)  # exclusive
+    for s, e in zip(starts, ends):
+        if (e - s) <= max_gap:
+            out[s:e] = 0.0
+    return out
+
+
 def _causal_bandpass_1d(x: np.ndarray, sos: np.ndarray, max_gap: int = 5) -> np.ndarray:
     out = np.full(x.shape, np.nan, dtype=float)
     valid = ~np.isnan(x)
@@ -58,19 +86,17 @@ def _causal_bandpass_1d(x: np.ndarray, sos: np.ndarray, max_gap: int = 5) -> np.
 
     internal_nan = np.isnan(segment)
     if internal_nan.any():
-        # Bridge short internal gaps (trading halts, missing prints): up to
-        # max_gap consecutive NaNs get linearly interpolated from each
-        # side. A gap longer than 2*max_gap is only partially bridged at
-        # its edges, so at least one NaN survives at its center; sosfilt's
-        # IIR state then stays NaN from that point through the *rest of
-        # the segment* -- including any later stretch of otherwise-valid
-        # data -- which conservatively excludes that ticker's tail rather
-        # than fabricating a bridge across a multi-year hole. A name with
-        # a genuine long absence should in practice get a fresh
-        # membership interval (see universe.py), which causal_bandpass
-        # never sees stitched together in the first place.
-        s = pd.Series(segment)
-        segment = s.interpolate(method="linear", limit=max_gap, limit_direction="both").to_numpy()
+        # Bridge short internal gaps (trading halts, missing prints): each
+        # run of at most max_gap consecutive NaNs is zero-filled. A gap
+        # longer than max_gap is left as NaN entirely; sosfilt's IIR state
+        # then stays NaN from that point through the *rest of the
+        # segment* -- including any later stretch of otherwise-valid data
+        # -- which conservatively excludes that ticker's tail rather than
+        # fabricating a bridge across a multi-year hole. A name with a
+        # genuine long absence should in practice get a fresh membership
+        # interval (see universe.py), which causal_bandpass never sees
+        # stitched together in the first place.
+        segment = _bridge_short_gaps(segment, max_gap)
 
     filtered = sosfilt(sos, segment)
     out[first : last + 1] = filtered

@@ -38,7 +38,7 @@ from fasflocken.config import (
     MAX_GROSS,
 )
 from fasflocken.pipeline import compute_sector_signal, zscore_from_R_daily
-from fasflocken.backtest import run_backtest, annualized_sharpe, annualized_return, annualized_vol, max_drawdown
+from fasflocken.backtest import run_backtest, annualized_sharpe, annualized_return, annualized_vol, max_drawdown, since
 from fasflocken.universe import UniverseProvider
 
 
@@ -81,7 +81,14 @@ def run_grid(
     zlb_grid=Z_LOOKBACK_GRID_WEEKS,
     legs_grid=LEGS_GRID,
     progress: callable = None,
+    eval_start: _dt.date | None = None,
 ) -> GridResult:
+    """eval_start: if given, performance stats (sharpe/ann_return/etc.) and
+    `weekly_returns_by_cell` are computed only on weeks >= eval_start (see
+    backtest.since). Use this whenever `start` includes a burn-in period --
+    otherwise every cell's Sharpe is diluted by however many forced-zero
+    burn-in weeks it had, unevenly so across the z_lookback_weeks axis.
+    """
     rows = []
     returns_by_cell: dict[str, pd.Series] = {}
 
@@ -106,18 +113,19 @@ def run_grid(
                         cost_model=cost_model, sectors=sectors, z_override=z_panel,
                     )
                     cid = _cell_id(cell_params)
-                    returns_by_cell[cid] = bt.weekly_returns
+                    eval_returns = since(bt.weekly_returns, eval_start)
+                    returns_by_cell[cid] = eval_returns
                     rows.append(
                         {
                             "cell_id": cid,
                             "band_low": band[0], "band_high": band[1], "window": window,
                             "z_lookback_weeks": zlb, "n_legs": legs,
-                            "sharpe": annualized_sharpe(bt.weekly_returns),
-                            "ann_return": annualized_return(bt.weekly_returns),
-                            "ann_vol": annualized_vol(bt.weekly_returns),
-                            "max_dd": max_drawdown(bt.weekly_returns),
+                            "sharpe": annualized_sharpe(eval_returns),
+                            "ann_return": annualized_return(eval_returns),
+                            "ann_vol": annualized_vol(eval_returns),
+                            "max_dd": max_drawdown(eval_returns),
                             "avg_turnover": float(bt.turnover.mean()) if len(bt.turnover) else float("nan"),
-                            "n_obs": int(bt.weekly_returns.notna().sum()),
+                            "n_obs": int(eval_returns.notna().sum()),
                         }
                     )
                     if progress is not None:
