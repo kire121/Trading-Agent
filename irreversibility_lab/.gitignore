@@ -1,0 +1,9 @@
+data/*.csv
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Results are committed explicitly once the pipeline run has fully
+# completed (see run_pipeline.py) -- ignored here so a commit made while a
+# background run is still in progress doesn't capture a half-written log.
+results/
