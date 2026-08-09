@@ -1,0 +1,223 @@
+{
+  "universe": {
+    "n_tickers": 24,
+    "tickers": [
+      "XLB",
+      "XLE",
+      "XLF",
+      "XLI",
+      "XLK",
+      "XLP",
+      "XLU",
+      "XLV",
+      "XLY",
+      "XLC",
+      "XLRE",
+      "SMH",
+      "XBI",
+      "KRE",
+      "XOP",
+      "OIH",
+      "XHB",
+      "XRT",
+      "ITA",
+      "IYT",
+      "GDX",
+      "IYR",
+      "KBE",
+      "XME"
+    ],
+    "benchmark": "SPY",
+    "date_range": [
+      "1993-01-29",
+      "2026-08-07"
+    ]
+  },
+  "primary": {
+    "n_obs": 1750,
+    "mean_period_return": -0.0002036210029831825,
+    "annualized_return": -0.01198188028136904,
+    "annualized_vol": 0.05405849976632751,
+    "sharpe": -0.19586729563147862,
+    "sortino": -0.11574466231605997,
+    "max_drawdown": -0.4098314528512986,
+    "skew": -0.39744516541808206,
+    "kurtosis": 24.917737161737207,
+    "hit_rate": 0.16685714285714287
+  },
+  "mirror": {
+    "n_obs": 1750,
+    "mean_period_return": -2.3202992287830912e-05,
+    "annualized_return": -0.0017663170165709285,
+    "annualized_vol": 0.033538186074553174,
+    "sharpe": -0.035975577101430414,
+    "sortino": -0.014212740485197682,
+    "max_drawdown": -0.27403452511445403,
+    "skew": 0.5745258371837425,
+    "kurtosis": 33.4170298645531,
+    "hit_rate": 0.07714285714285714
+  },
+  "always_on": {
+    "n_obs": 1750,
+    "mean_period_return": 2.4827144222457813e-05,
+    "annualized_return": -0.001968195964622721,
+    "annualized_vol": 0.0809986407397156,
+    "sharpe": 0.01593868104177694,
+    "sortino": 0.013847168184589745,
+    "max_drawdown": -0.49192157182294227,
+    "skew": 0.8374538930058284,
+    "kurtosis": 16.623287882817724,
+    "hit_rate": 0.3251428571428571
+  },
+  "twin_gates": {
+    "rho_bar": {
+      "n_obs": 1750,
+      "mean_period_return": 0.00017363491505824878,
+      "annualized_return": 0.008437177492072179,
+      "annualized_vol": 0.03557924439245123,
+      "sharpe": 0.2537719880567391,
+      "sortino": 0.11041336881751808,
+      "max_drawdown": -0.12020398087590112,
+      "skew": 3.015489308735138,
+      "kurtosis": 48.040493278177614,
+      "hit_rate": 0.06742857142857143
+    },
+    "absorption_ratio": {
+      "n_obs": 1750,
+      "mean_period_return": 0.00014129498207449527,
+      "annualized_return": 0.006465177710290426,
+      "annualized_vol": 0.042643253726905736,
+      "sharpe": 0.1722978062351268,
+      "sortino": 0.086359539050864,
+      "max_drawdown": -0.2361790392945723,
+      "skew": 1.8000457682715094,
+      "kurtosis": 29.029708032686095,
+      "hit_rate": 0.10057142857142858
+    },
+    "index_vol": {
+      "n_obs": 1750,
+      "mean_period_return": 0.00021274824825795498,
+      "annualized_return": 0.010139862148,
+      "annualized_vol": 0.04424960061972915,
+      "sharpe": 0.25001149738018524,
+      "sortino": 0.11841885341994023,
+      "max_drawdown": -0.18599725216426843,
+      "skew": 1.4014330841298968,
+      "kurtosis": 27.757806872961492,
+      "hit_rate": 0.09657142857142857
+    }
+  },
+  "beats_always_on": false,
+  "dsr_full_sample": {
+    "dsr": 0.0017254220511097502,
+    "z": -2.9244329529565833,
+    "sr0": 0.04254183114564755,
+    "n_obs": 1750,
+    "var_sr": 0.0004209876861354816,
+    "n_trials": 30
+  },
+  "dsr_oos": {
+    "dsr": 0.005849140446715787,
+    "z": -2.5211174182185765,
+    "sr0": 0.09378691237598437,
+    "n_obs": 449,
+    "var_sr": 0.002046074819847228,
+    "n_trials": 30
+  },
+  "block_bootstrap": {
+    "actual_sharpe": -0.2537250263658691,
+    "boot_sharpe_mean": -0.06379751128746743,
+    "boot_sharpe_std": 0.13631775996428191,
+    "p_value": 0.914,
+    "n_boot": 1000,
+    "block_size": 13.0,
+    "on_fraction": 0.5925215723873442
+  },
+  "twin_gate_regression": {
+    "n_obs": 1043,
+    "b_L": 0.0003662483116605798,
+    "se_L": 0.0005286795402312821,
+    "t_L": 0.6927605170806433,
+    "p_L": 0.4884598538986281,
+    "b_rho_bar": 0.0014944619786488058,
+    "p_rho_bar": 0.06837387185024771,
+    "b_absorption_ratio": -5.209169842597435e-06,
+    "p_absorption_ratio": 0.9935419749987183,
+    "r_squared": 0.008531808339385716
+  },
+  "pnl_concentration": {
+    "share": -0.45746960585222535,
+    "window": 8,
+    "total_pnl": -0.35633675522056935,
+    "max_window_pnl": 0.16301323496141476,
+    "max_window_end_date": "2020-04-24T00:00:00"
+  },
+  "subperiod_sign_check": [
+    {
+      "n_obs": 72,
+      "b_L": 0.003763905698934751,
+      "se_L": 0.0010684614171619165,
+      "t_L": 3.5227343154164283,
+      "p_L": 0.0004271192978940279,
+      "b_rho_bar": -0.005573010205147904,
+      "p_rho_bar": 0.056162538024957784,
+      "b_absorption_ratio": 0.006383824205063138,
+      "p_absorption_ratio": 0.08542308875935527,
+      "r_squared": 0.11630186117977426,
+      "start": "2000-01-01T00:00:00",
+      "end": "2007-12-31T00:00:00",
+      "insufficient_data": false
+    },
+    {
+      "n_obs": 261,
+      "b_L": 0.0009439885934261783,
+      "se_L": 0.0016052198791425593,
+      "t_L": 0.5880743228338395,
+      "p_L": 0.5564824071928848,
+      "b_rho_bar": 0.0021215451569497356,
+      "p_rho_bar": 0.07573473448560983,
+      "b_absorption_ratio": -0.0015058501070437534,
+      "p_absorption_ratio": 0.12094116713854197,
+      "r_squared": 0.008043848731644543,
+      "start": "2008-01-01T00:00:00",
+      "end": "2012-12-31T00:00:00",
+      "insufficient_data": false
+    },
+    {
+      "n_obs": 261,
+      "b_L": 0.0009727736242408606,
+      "se_L": 0.0007725423983339971,
+      "t_L": 1.2591847726916556,
+      "p_L": 0.2079636002986135,
+      "b_rho_bar": -0.0002013582813186489,
+      "p_rho_bar": 0.8331121660009457,
+      "b_absorption_ratio": 0.0005086427304229589,
+      "p_absorption_ratio": 0.5367451306921761,
+      "r_squared": 0.0064397350434831635,
+      "start": "2013-01-01T00:00:00",
+      "end": "2017-12-31T00:00:00",
+      "insufficient_data": false
+    }
+  ],
+  "rejection_criteria": {
+    "dsr_oos_le_zero": true,
+    "dsr_oos_z": -2.5211174182185765,
+    "dsr_oos_value": 0.005849140446715787,
+    "twin_explains_all": true,
+    "twin_gate_p_L": 0.4884598538986281,
+    "pnl_concentration_gt_50pct": false,
+    "pnl_concentration_share": -0.45746960585222535,
+    "subperiod_sign_flip": false,
+    "subperiods_with_data": 3
+  },
+  "diversification": {
+    "spy_beta": 0.02722052904751728,
+    "spy_corr": 0.08562816072144999,
+    "momentum_benchmark_corr": 0.03555012510755379,
+    "tidspilen_corr": null,
+    "tidspilen_note": "No such strategy exists in this codebase; cannot be computed here."
+  },
+  "grid": {
+    "n_variants": 30
+  }
+}
