@@ -427,7 +427,11 @@ class EODHDProvider(UniverseProvider):
             # ticker just won't be usable for anything downstream.
             rows = None
         if not rows or not isinstance(rows, list):
-            df = pd.DataFrame(columns=["close"])
+            # dtype=float explicitly: an untyped empty column defaults to
+            # object dtype, which np.log() (and anything else expecting a
+            # numeric array) chokes on once this gets concatenated with
+            # other tickers' float columns into one DataFrame.
+            df = pd.DataFrame({"close": pd.Series(dtype=float)})
             df.index = pd.DatetimeIndex([])
         else:
             df = pd.DataFrame(rows)

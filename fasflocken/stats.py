@@ -199,7 +199,7 @@ def random_sector_baseline(
     """
     daily_dates = provider.trading_calendar(start, end)
     etfs = [SECTOR_TO_ETF[s] for s in sectors]
-    etf_prices = provider.sector_etf_prices(start, end, etfs).reindex(index=daily_dates)
+    etf_prices = provider.sector_etf_prices(start, end, etfs).reindex(index=daily_dates).astype(float)
     etf_log_returns = np.log(etf_prices).diff()
 
     dummy = pd.Series(0.0, index=daily_dates)
@@ -271,7 +271,7 @@ def oracle_backtest(
     """
     daily_dates = provider.trading_calendar(start, end)
     etfs = [SECTOR_TO_ETF[s] for s in sectors]
-    etf_prices = provider.sector_etf_prices(start, end, etfs).reindex(index=daily_dates)
+    etf_prices = provider.sector_etf_prices(start, end, etfs).reindex(index=daily_dates).astype(float)
     etf_log_returns = np.log(etf_prices).diff()
 
     dummy = pd.Series(0.0, index=daily_dates)

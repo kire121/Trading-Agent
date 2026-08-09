@@ -1,17 +1,18 @@
 """
 Fasflocken (PH-1) -- CLI entry point.
 
-No real market-data credentials are configured in this environment (see
-universe.py / README.md), so every mode here runs against
-SyntheticUniverseProvider by default. Swap in NorgateProvider /
-SharadarProvider / EODHDProvider (once configured with real credentials)
-by passing --provider and the relevant env vars; the rest of the pipeline
-is provider-agnostic.
+Defaults to SyntheticUniverseProvider (no credentials needed). Pass
+--provider eodhd to run against real data via EODHDProvider, which reads
+EODHD_API_KEY / EODHD_API_TOKEN from the environment -- see universe.py /
+README.md's "Using real data (EODHD)" section for what that provider
+actually does and its one disclosed coverage gap.
 
 Usage:
     python -m fasflocken.run demo
     python -m fasflocken.run grid --start 2015-01-01 --end 2019-12-31
     python -m fasflocken.run full --start 2015-01-01 --end 2019-12-31
+    python -m fasflocken.run full --provider eodhd --n-sectors 11 \
+        --start 2002-01-01 --eval-start 2004-01-01 --end 2026-08-09
 """
 
 from __future__ import annotations
@@ -20,7 +21,7 @@ import argparse
 import datetime as _dt
 
 from fasflocken.config import DEFAULT_PARAMS, GICS_SECTORS
-from fasflocken.universe import SyntheticUniverseProvider
+from fasflocken.universe import SyntheticUniverseProvider, EODHDProvider
 from fasflocken.backtest import (
     run_backtest,
     annualized_sharpe,
@@ -38,17 +39,22 @@ def _parse_date(s: str) -> _dt.date:
     return _dt.datetime.strptime(s, "%Y-%m-%d").date()
 
 
-def _demo_provider(start: _dt.date, end: _dt.date, seed: int, n_per_sector: int, sectors) -> SyntheticUniverseProvider:
-    return SyntheticUniverseProvider(start=start, end=end, n_per_sector=n_per_sector, seed=seed, sectors=sectors)
+def _build_provider(args):
+    if args.provider == "eodhd":
+        return EODHDProvider(cache_dir=args.cache_dir, max_workers=args.max_workers)
+    sectors = tuple(list(GICS_SECTORS)[: args.n_sectors])
+    return SyntheticUniverseProvider(
+        start=args.start, end=args.end, n_per_sector=args.n_per_sector, seed=args.seed, sectors=sectors
+    )
 
 
 def cmd_demo(args) -> None:
     sectors = tuple(list(GICS_SECTORS)[: args.n_sectors])
-    provider = _demo_provider(args.start, args.end, args.seed, args.n_per_sector, sectors)
+    provider = _build_provider(args)
     bt = run_backtest(provider, args.start, args.end, DEFAULT_PARAMS, sectors=sectors)
     r = since(bt.weekly_returns, args.eval_start)
 
-    print(f"Fasflocken demo backtest ({args.start} .. {args.end}), {len(sectors)} sectors, synthetic data")
+    print(f"Fasflocken demo backtest ({args.start} .. {args.end}), {len(sectors)} sectors, {args.provider} data")
     if args.eval_start:
         print(f"  (performance stats from {args.eval_start} onward, excluding burn-in)")
     print(f"  weeks traded        : {len(r)}")
@@ -62,7 +68,7 @@ def cmd_demo(args) -> None:
 
 def cmd_grid(args) -> None:
     sectors = tuple(list(GICS_SECTORS)[: args.n_sectors])
-    provider = _demo_provider(args.start, args.end, args.seed, args.n_per_sector, sectors)
+    provider = _build_provider(args)
 
     def _progress(row):
         print(f"  cell {row['cell_id']:<28} sharpe={row['sharpe']:.3f}")
@@ -76,7 +82,7 @@ def cmd_grid(args) -> None:
 
 def cmd_full(args) -> None:
     sectors = tuple(list(GICS_SECTORS)[: args.n_sectors])
-    provider = _demo_provider(args.start, args.end, args.seed, args.n_per_sector, sectors)
+    provider = _build_provider(args)
     eval_start = args.eval_start
 
     print("1/6 computing sector signals (default grid cell)...")
@@ -120,10 +126,11 @@ def cmd_full(args) -> None:
     for reason, fired in verdict["reasons"].items():
         print(f"  [{'X' if fired else ' '}] {reason}")
     print("=" * 60)
-    print(
-        "Note: this is a synthetic-data smoke run, not a real backtest -- "
-        "see README.md for how to plug in real point-in-time data."
-    )
+    if args.provider == "synthetic":
+        print(
+            "Note: this is a synthetic-data smoke run, not a real backtest -- "
+            "pass --provider eodhd for real point-in-time data."
+        )
 
 
 def _common_args_parser() -> argparse.ArgumentParser:
@@ -138,8 +145,14 @@ def _common_args_parser() -> argparse.ArgumentParser:
         help="only compute performance stats (Sharpe/DSR/etc.) from this date onward, excluding an earlier "
              "burn-in period included in --start; defaults to --start (no slicing)",
     )
-    common.add_argument("--seed", type=int, default=7)
-    common.add_argument("--n-per-sector", type=int, default=20)
+    common.add_argument(
+        "--provider", choices=["synthetic", "eodhd"], default="synthetic",
+        help="synthetic (default, no credentials needed) or eodhd (real data, needs EODHD_API_KEY)",
+    )
+    common.add_argument("--seed", type=int, default=7, help="synthetic provider only")
+    common.add_argument("--n-per-sector", type=int, default=20, help="synthetic provider only")
+    common.add_argument("--cache-dir", type=str, default=None, help="eodhd provider only; default: system temp dir")
+    common.add_argument("--max-workers", type=int, default=6, help="eodhd provider only; thread pool size for fan-out fetches")
     common.add_argument("--n-sectors", type=int, default=9, help="use the first N of the 11 GICS sectors (default 9, always-on)")
     common.add_argument("--bootstrap-draws", type=int, default=200)
     common.add_argument("--verbose", action="store_true")

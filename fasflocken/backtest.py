@@ -112,7 +112,7 @@ def run_backtest(
         z_panel = build_z_panel(sector_signals, twin=False)
 
     etfs = [SECTOR_TO_ETF[s] for s in sectors]
-    etf_prices = provider.sector_etf_prices(start, end, etfs).reindex(index=daily_dates)
+    etf_prices = provider.sector_etf_prices(start, end, etfs).reindex(index=daily_dates).astype(float)
     etf_log_returns = np.log(etf_prices).diff()
 
     signal_dates = z_panel.index[(z_panel.index >= pd.Timestamp(start)) & (z_panel.index <= pd.Timestamp(end))]

@@ -98,7 +98,10 @@ def compute_sector_signal(
         empty_w = pd.Series(dtype=float)
         return SectorSignal(sector, empty, empty_w, empty.copy(), empty_w.copy(), empty.copy())
 
-    prices = provider.prices(tickers, start, end).reindex(index=dates, columns=tickers)
+    # astype(float) defensively: a provider returning even one non-numeric
+    # (e.g. object-dtype, from an empty/unresolvable ticker column) column
+    # would otherwise make np.log() fail across the whole DataFrame.
+    prices = provider.prices(tickers, start, end).reindex(index=dates, columns=tickers).astype(float)
     log_prices = np.log(prices)
     returns = log_prices.diff()
 
