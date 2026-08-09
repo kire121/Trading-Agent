@@ -21,9 +21,10 @@ smygtestas").
 
 - **Universe**: 24 US sector/industry ETFs (XLB, XLE, XLF, XLI, XLK, XLP,
   XLU, XLV, XLY, XLC, XLRE, SMH, XBI, KRE, XOP, OIH, XHB, XRT, ITA, IYT,
-  GDX, IYR, KBE, XME) + SPY as benchmark/hedge instrument. ADV filter
-  >$20M, 63-trading-day trailing lookback, point-in-time (a ticker only
-  enters the universe once it has both traded and cleared the ADV filter).
+  GDX, IYR, KBE, XME) + SPY as benchmark/hedge instrument. ADV filter of
+  at least $20M, 63-trading-day trailing lookback, point-in-time (a ticker
+  only enters the universe once it has both traded and cleared the ADV
+  filter).
 - **Data**: Yahoo Finance chart API (declared substitution for
   Tiingo/Norgate/EODHD — see `README.md`), full daily history back to each
   ticker's actual first trade date through 2026-08-07.
