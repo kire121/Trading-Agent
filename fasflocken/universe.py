@@ -12,15 +12,26 @@ This module defines:
   * `UniverseProvider`      -- the abstract interface every data source
                                 implements (constituents / prices / ETF
                                 prices / trading calendar).
-  * `NorgateProvider`, `SharadarProvider`, `EODHDProvider`
-                              -- thin real-vendor stubs. None of these
-                                 vendors are reachable from this sandbox
-                                 (no credentials, no vendor packages
-                                 installed), so each raises
-                                 `DataProviderNotConfigured` with the exact
-                                 package + call a user needs to finish
-                                 wiring, rather than silently returning
-                                 fabricated data.
+  * `NorgateProvider`, `SharadarProvider`
+                              -- thin real-vendor stubs. Neither vendor is
+                                 reachable from this environment (no NDU
+                                 license, no Nasdaq Data Link key), so each
+                                 raises `DataProviderNotConfigured` with the
+                                 exact package + call a user needs to
+                                 finish wiring, rather than silently
+                                 returning fabricated data.
+  * `EODHDProvider`          -- a real, working implementation (not a
+                                 stub): point-in-time S&P 500 membership
+                                 from `fundamentals/{index}.INDX`'s
+                                 `HistoricalTickerComponents`, per-ticker
+                                 GICS sector, and adjusted EOD prices, all
+                                 via plain REST calls against api_token
+                                 read from EODHD_API_KEY / EODHD_API_TOKEN
+                                 (or passed explicitly). Raises
+                                 `DataProviderNotConfigured` if no key is
+                                 available. See its class docstring for
+                                 the (disclosed, non-silent) sector-coverage
+                                 gap on some old delisted names.
   * `SyntheticUniverseProvider`
                               -- a fully deterministic, seeded generator
                                  used by the test suite and by run.py's
@@ -34,6 +45,10 @@ This module defines:
 from __future__ import annotations
 
 import datetime as _dt
+import json
+import os
+import tempfile
+import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Callable, Sequence
@@ -41,7 +56,7 @@ from typing import Callable, Sequence
 import numpy as np
 import pandas as pd
 
-from fasflocken.config import GICS_SECTORS
+from fasflocken.config import GICS_SECTORS, SECTOR_TO_ETF
 
 
 class DataProviderNotConfigured(RuntimeError):
@@ -188,36 +203,274 @@ class SharadarProvider(UniverseProvider):
 
 
 class EODHDProvider(UniverseProvider):
-    """EODHD (budget alternative) via plain REST calls.
+    """EODHD, via plain REST calls, using a real EODHD_API_KEY when one is
+    configured (checked at construction time).
 
-    Wiring sketch:
-        GET https://eodhd.com/api/fundamentals/{ticker}.US?api_token=...   # GICS sector
-        GET https://eodhd.com/api/eod/{ticker}.US?api_token=...&fmt=json  # OHLCV
-        GET https://eodhd.com/api/index_constituents/GSPC.INDX?...        # current constituents only;
-            point-in-time history is NOT available on EODHD's standard tier and must be
-            reconstructed from historical index-addition/removal press releases.
+    Contrary to this module's earlier assumption (and this package's
+    original README), EODHD's `fundamentals/{index}.INDX` endpoint DOES
+    expose point-in-time S&P 500 membership: its `HistoricalTickerComponents`
+    field is a StartDate/EndDate interval per ticker that's ever been a
+    constituent (not just the current 503), which is exactly what
+    universe.PointInTimeMembership needs. Verified live against the API
+    (e.g. Lehman Brothers shows EndDate=2008-09-16, IsDelisted=1).
+
+    GICS sector comes from each ticker's own `fundamentals/{ticker}.US`
+    `General.GicSector` field (the literal GICS taxonomy -- confirmed to
+    match this package's sector names exactly except "Information
+    Technology" -> "Technology", handled by `_GICSECTOR_TO_OURS` below).
+    This is a per-ticker API call, so it's cached to disk; it also isn't
+    reliable for older delisted names (some very old bankruptcies/M&A
+    return GicSector="NA" -- EODHD's fundamentals record for them is too
+    sparse), which are then excluded from that sector's constituent pool.
+    That's a real, disclosed gap, not a silent one: see `sector_coverage()`.
+
+    Prices are EOD *adjusted* close (splits/dividends already applied) via
+    `eod/{ticker}.US`, which EODHD retains for delisted tickers too (no
+    survivorship bias in the price series itself, unlike the sector
+    coverage caveat above).
+
+    All network responses are cached to `cache_dir` (default: a directory
+    under the system temp dir, i.e. *outside* any git working tree --
+    EODHD's data is licensed, not something this package's tests or repo
+    should ever bundle or commit).
     """
 
-    def __init__(self, api_token: str | None = None, *_, **__):
-        raise DataProviderNotConfigured(
-            "EODHD requires EODHD_API_TOKEN and does not provide point-in-time S&P "
-            "500 membership on its standard tier (only current constituents) -- "
-            "the point-in-time history would need to be reconstructed separately. "
-            "Neither the token nor that reconstruction is available in this "
-            "environment."
-        )
+    BASE_URL = "https://eodhd.com/api"
 
-    def constituents(self, sector, as_of):  # pragma: no cover
-        raise NotImplementedError
+    # EODHD's GicSector uses the literal GICS sector name, which matches
+    # config.GICS_SECTORS verbatim except for Information Technology.
+    _GICSECTOR_TO_OURS: dict[str, str] = {"Information Technology": "Technology"}
 
-    def prices(self, tickers, start, end):  # pragma: no cover
-        raise NotImplementedError
+    def __init__(
+        self,
+        api_token: str | None = None,
+        index_ticker: str = "GSPC.INDX",
+        cache_dir: str | None = None,
+        session=None,
+        request_delay: float = 0.05,
+        timeout: float = 30.0,
+        max_workers: int = 6,
+    ):
+        self.api_token = api_token or os.environ.get("EODHD_API_KEY") or os.environ.get("EODHD_API_TOKEN")
+        if not self.api_token:
+            raise DataProviderNotConfigured(
+                "EODHD requires an API key: pass api_token= explicitly, or set the "
+                "EODHD_API_KEY (or EODHD_API_TOKEN) environment variable."
+            )
 
-    def sector_etf_prices(self, start, end, etfs=None):  # pragma: no cover
-        raise NotImplementedError
+        self.index_ticker = index_ticker
+        self.cache_dir = cache_dir or os.path.join(tempfile.gettempdir(), "fasflocken_eodhd_cache")
+        os.makedirs(self.cache_dir, exist_ok=True)
+        self.request_delay = request_delay
+        self.timeout = timeout
+        # Kept conservative by default: a local dev/CI network path (e.g.
+        # routed through a policy-enforcing egress proxy) may not sustain
+        # high fan-out as reliably as a direct connection to EODHD would.
+        # Bump this once you've confirmed your own network path handles it.
+        self.max_workers = max_workers
 
-    def trading_calendar(self, start, end):  # pragma: no cover
-        raise NotImplementedError
+        if session is None:
+            try:
+                import requests
+            except ImportError as exc:
+                raise DataProviderNotConfigured(
+                    "EODHDProvider requires the `requests` package (pip install requests)."
+                ) from exc
+            session = requests.Session()
+            pool_size = max(10, max_workers * 2)
+            adapter = requests.adapters.HTTPAdapter(pool_connections=pool_size, pool_maxsize=pool_size)
+            session.mount("https://", adapter)
+            session.mount("http://", adapter)
+        self.session = session
+
+        self._membership: PointInTimeMembership | None = None
+        self._sector_lookup_failures: list[str] = []
+        self._price_cache: dict[str, pd.DataFrame] = {}
+
+    # -- low-level HTTP -----------------------------------------------
+
+    def _get(self, path: str, max_retries: int = 6, **params) -> dict:
+        """A transient failure here (timeout, connection reset, 5xx, 429)
+        must not be silently indistinguishable from "this ticker genuinely
+        has no data" -- callers like _lookup_gics_sector treat any
+        exception as the latter and permanently drop the ticker from the
+        membership pool, so a flaky proxy hop or rate-limit blip under
+        concurrent load could otherwise quietly corrupt the constituent
+        set. Retried with backoff (honoring a Retry-After header on 429,
+        confirmed live: EODHD returns `x-ratelimit-limit` on every
+        response, i.e. a real short-window throttle on top of the daily
+        cap). A non-429 4xx (bad ticker, bad auth) fails fast instead,
+        since retrying that would just waste calls on the same bad request.
+        """
+        import requests
+
+        params = {**params, "api_token": self.api_token, "fmt": "json"}
+        last_exc: Exception | None = None
+        for attempt in range(max_retries):
+            try:
+                resp = self.session.get(f"{self.BASE_URL}/{path}", params=params, timeout=self.timeout)
+                if self.request_delay:
+                    time.sleep(self.request_delay)
+                resp.raise_for_status()
+                return resp.json()
+            except requests.HTTPError as exc:
+                if resp.status_code == 429:
+                    retry_after = resp.headers.get("Retry-After")
+                    wait = float(retry_after) if retry_after else 1.0 * (2**attempt)
+                    last_exc = exc
+                elif 400 <= resp.status_code < 500:
+                    raise  # bad ticker / auth problem -- retrying won't help
+                else:
+                    last_exc = exc
+                    wait = 0.25 * (2**attempt)
+            except (requests.ConnectionError, requests.Timeout) as exc:
+                last_exc = exc
+                wait = 0.25 * (2**attempt)
+            if attempt < max_retries - 1:
+                time.sleep(min(wait, 20.0))
+        raise last_exc
+
+    def _cache_path(self, kind: str, key: str) -> str:
+        safe_key = key.replace("/", "_")
+        return os.path.join(self.cache_dir, f"{kind}_{safe_key}.json")
+
+    def _get_cached(self, kind: str, key: str, path: str, **params) -> dict:
+        cache_file = self._cache_path(kind, key)
+        if os.path.exists(cache_file):
+            with open(cache_file) as f:
+                return json.load(f)
+        data = self._get(path, **params)
+        with open(cache_file, "w") as f:
+            json.dump(data, f)
+        return data
+
+    # -- point-in-time membership + GICS sector ------------------------
+
+    def _load_membership(self, max_workers: int | None = None) -> None:
+        if self._membership is not None:
+            return
+        max_workers = max_workers or self.max_workers
+        data = self._get_cached("index", self.index_ticker, f"fundamentals/{self.index_ticker}")
+        hist = data.get("HistoricalTickerComponents", {}) or {}
+
+        entries = [e for e in hist.values() if e.get("Code")]
+        codes = [e["Code"] for e in entries]
+
+        # Sector lookup is one HTTP round-trip per ticker (~800 of them for
+        # the full S&P 500 history) and purely I/O-bound, so it's fanned out
+        # across a thread pool rather than done serially -- otherwise a cold
+        # cache means minutes of sequential proxy round-trips before any
+        # backtest can even start.
+        from concurrent.futures import ThreadPoolExecutor
+
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            sectors = list(pool.map(self._lookup_gics_sector, codes))
+
+        intervals: list[MembershipInterval] = []
+        for entry, sector in zip(entries, sectors):
+            code = entry["Code"]
+            start = (
+                _dt.datetime.strptime(entry["StartDate"], "%Y-%m-%d").date()
+                if entry.get("StartDate")
+                else _dt.date(1970, 1, 1)
+            )
+            end = (
+                _dt.datetime.strptime(entry["EndDate"], "%Y-%m-%d").date()
+                if entry.get("EndDate")
+                else _dt.date(9999, 1, 1)
+            )
+            if sector is None:
+                self._sector_lookup_failures.append(code)
+                continue
+            intervals.append(MembershipInterval(code, sector, start, end))
+
+        self._membership = PointInTimeMembership(intervals)
+
+    def _lookup_gics_sector(self, ticker: str) -> str | None:
+        # A single (comma-free) `filter=` returns the bare value directly
+        # (e.g. the JSON string "Information Technology"), not a
+        # {"General::GicSector": ...} envelope -- only multi-field filters
+        # get wrapped that way.
+        try:
+            raw = self._get_cached(
+                "fundamentals", ticker, f"fundamentals/{ticker}.US", filter="General::GicSector"
+            )
+        except Exception:
+            return None
+        if not isinstance(raw, str) or not raw or raw == "NA":
+            return None
+        return self._GICSECTOR_TO_OURS.get(raw, raw)
+
+    def sector_coverage(self) -> dict:
+        """Diagnostics: how many historical S&P 500 tickers got a usable
+        GICS sector vs. how many were dropped (see class docstring).
+        """
+        self._load_membership()
+        covered = len(self._membership.all_tickers()) if self._membership else 0
+        return {
+            "covered": covered,
+            "dropped": len(self._sector_lookup_failures),
+            "dropped_tickers": list(self._sector_lookup_failures),
+        }
+
+    # -- prices ----------------------------------------------------------
+
+    def _fetch_eod(self, ticker: str) -> pd.DataFrame:
+        if ticker in self._price_cache:
+            return self._price_cache[ticker]
+        try:
+            rows = self._get_cached("eod", ticker, f"eod/{ticker}.US", period="d", order="a")
+        except Exception:
+            # Unresolvable ticker (delisted beyond EODHD's coverage, a
+            # symbol collision, transient error, ...): treated as "no price
+            # data", not a fatal error for the whole prices() call -- the
+            # ticker just won't be usable for anything downstream.
+            rows = None
+        if not rows or not isinstance(rows, list):
+            df = pd.DataFrame(columns=["close"])
+            df.index = pd.DatetimeIndex([])
+        else:
+            df = pd.DataFrame(rows)
+            df["date"] = pd.to_datetime(df["date"])
+            df = df.set_index("date").sort_index()
+            # Raw EOD rows carry both "close" (unadjusted) and
+            # "adjusted_close"; select adjusted_close FIRST, then rename --
+            # renaming in place would leave two columns both labeled
+            # "close" (the pre-existing raw one plus the renamed one),
+            # and single-bracket selection on a duplicate label returns a
+            # DataFrame instead of a Series, breaking every caller that
+            # expects prices()/sector_etf_prices() to hand back one
+            # column per ticker.
+            df = df[["adjusted_close"]].rename(columns={"adjusted_close": "close"})
+        self._price_cache[ticker] = df
+        return df
+
+    # -- UniverseProvider interface -----------------------------------
+
+    def constituents(self, sector: str, as_of: _dt.date) -> list[str]:
+        self._load_membership()
+        return self._membership.constituents_as_of(sector, as_of)
+
+    def prices(self, tickers, start: _dt.date, end: _dt.date, max_workers: int | None = None) -> pd.DataFrame:
+        tickers = list(tickers)
+        max_workers = max_workers or self.max_workers
+        uncached = [t for t in tickers if t not in self._price_cache]
+        if uncached:
+            from concurrent.futures import ThreadPoolExecutor
+
+            with ThreadPoolExecutor(max_workers=max_workers) as pool:
+                list(pool.map(self._fetch_eod, uncached))  # populates self._price_cache as a side effect
+
+        cols = {t: self._fetch_eod(t)["close"].loc[str(start) : str(end)] for t in tickers}
+        return pd.DataFrame(cols)
+
+    def sector_etf_prices(self, start: _dt.date, end: _dt.date, etfs=None) -> pd.DataFrame:
+        etfs = list(etfs) if etfs is not None else list(SECTOR_TO_ETF.values())
+        return self.prices(etfs, start, end)
+
+    def trading_calendar(self, start: _dt.date, end: _dt.date) -> pd.DatetimeIndex:
+        ref = self._fetch_eod("SPY")["close"]
+        return ref.loc[str(start) : str(end)].index
 
 
 # ---------------------------------------------------------------------------

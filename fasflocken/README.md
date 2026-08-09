@@ -10,16 +10,18 @@ weekly, via Select Sector SPDRs.
 This package is a full, tested implementation of the spec's methodology
 -- signal, portfolio construction, backtest engine, and the entire
 null-hypothesis validation suite (bootstrap, boring twin, random
-baseline, oracle cap, DSR, overlap control) -- **against synthetic data**.
-No real point-in-time market data or vendor credentials are available in
-the environment this was built in; see "Plugging in real data" below.
+baseline, oracle cap, DSR, overlap control). The core test suite runs
+against synthetic data; `EODHDProvider` is a real, working implementation
+against EODHD's live API (not a stub) when `EODHD_API_KEY` is set -- see
+"Using real data (EODHD)" below. Norgate and Sharadar remain stubs (no
+credentials for either in the environment this was built in).
 
 ## Module map
 
 | Module | Responsibility |
 |---|---|
 | `config.py` | Sector/ETF map + inception dates, default params, declared grid, cost/vol constants, IS/OOS windows |
-| `universe.py` | Point-in-time provider interface; Norgate/Sharadar/EODHD stubs; `SyntheticUniverseProvider` for tests/demos |
+| `universe.py` | Point-in-time provider interface; real `EODHDProvider`; `NorgateProvider`/`SharadarProvider` stubs; `SyntheticUniverseProvider` for tests/demos |
 | `signals.py` | Causal Butterworth bandpass, rolling-window Hilbert phase, Kuramoto R, weekly Z-score |
 | `twin.py` | The "boring twin": rolling mean pairwise correlation on the same bandpassed series |
 | `pipeline.py` | Wires a provider through signals.py/twin.py into daily R_s(t)/Corr_s(t) and weekly Z_s(t)/Zc_s(t), respecting point-in-time membership |
@@ -34,7 +36,8 @@ the environment this was built in; see "Plugging in real data" below.
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-fasflocken.txt
-python -m pytest tests/ -q                      # 60 tests, ~15s, all synthetic data
+python -m pytest tests/ -q                      # 64 tests, ~17s, all synthetic data
+python -m pytest tests/test_fasflocken_eodhd_live.py -q  # +6 live tests, needs EODHD_API_KEY, real network calls
 python -m fasflocken.run demo                    # one backtest on synthetic data
 python -m fasflocken.run grid --verbose           # the 81-cell grid
 python -m fasflocken.run full                     # backtest + bootstrap + twin + oracle + DSR + verdict
@@ -106,18 +109,56 @@ python -m fasflocken.run full                     # backtest + bootstrap + twin 
    `SyntheticUniverseProvider` doesn't exercise it since it has no
    real-world GICS history to reclassify).
 
-## Plugging in real data
+## Using real data (EODHD)
 
-`universe.UniverseProvider` is the seam. `NorgateProvider` /
-`SharadarProvider` / `EODHDProvider` are stubs that raise
-`DataProviderNotConfigured` with the exact package/credential/call needed
--- none of the three are reachable from this environment (no NDU
-license, no Nasdaq Data Link key, no EODHD token, and EODHD's standard
-tier doesn't even offer point-in-time S&P 500 membership). Implement one
-against real data and everything else -- signals, portfolio, backtest,
-grid, null-hypothesis suite -- is unchanged; they only depend on the
-`UniverseProvider` interface (`constituents`, `prices`,
-`sector_etf_prices`, `trading_calendar`).
+`universe.UniverseProvider` is the seam every other module depends on
+(`constituents`, `prices`, `sector_etf_prices`, `trading_calendar`), so
+swapping the provider is all that's needed to run on real data --
+signals, portfolio, backtest, grid, null-hypothesis suite are unchanged.
+
+`EODHDProvider` is a real, working implementation (not a stub), used with
+```python
+from fasflocken.universe import EODHDProvider
+provider = EODHDProvider()  # reads EODHD_API_KEY / EODHD_API_TOKEN from the environment
+```
+Contrary to this package's original assumption, EODHD's
+`fundamentals/{index}.INDX` endpoint *does* expose point-in-time S&P 500
+membership via its `HistoricalTickerComponents` field (a StartDate/EndDate
+interval per ticker that's ever been a constituent, not just the current
+503) -- verified live (e.g. Lehman Brothers shows
+`EndDate=2008-09-16, IsDelisted=1`). GICS sector comes from each ticker's
+own `fundamentals/{ticker}.US` `General.GicSector` field, which matches
+this package's sector names exactly except "Information Technology" ->
+"Technology". Prices are EOD *adjusted* close (splits/dividends applied),
+retained for delisted tickers too.
+
+Known, disclosed limitation: some very old delisted/bankrupt names (e.g.
+Bethlehem Steel) have too sparse an EODHD fundamentals record to resolve a
+GicSector at all (`"NA"`) and are excluded from that sector's constituent
+pool rather than guessed at -- call `provider.sector_coverage()` for a
+covered/dropped count. This affects the *signal's* constituent pool for a
+handful of old names; it does not affect index membership itself or price
+data (which EODHD keeps for delisted tickers).
+
+Every API response is cached to disk (default: a directory under the
+system temp dir, override via `cache_dir=`) -- EODHD's data is licensed,
+so that cache is never bundled with this repo (outside any git working
+tree, `.gitignore`d if ever placed inside one) and `tests/test_fasflocken_eodhd_live.py`
+(skipped without a key, makes real network calls) always uses a
+throwaway pytest tmp dir. Membership and multi-ticker price loads fan out
+across a thread pool (~800 tickers sequentially would otherwise mean
+minutes of round-trips through a proxy) -- `max_workers=` on
+`EODHDProvider.__init__` controls it (default 6, deliberately
+conservative). `_get` retries transient failures and 429s (honoring
+`Retry-After`) with backoff: EODHD returns an `x-ratelimit-limit` header
+on every response, i.e. a real short-window throttle on top of the daily
+cap, and without retrying 429 specifically the ~800-call membership sweep
+was observed to intermittently fail under repeated back-to-back runs.
+
+Norgate (`NorgateProvider`) and Sharadar (`SharadarProvider`) remain
+stubs that raise `DataProviderNotConfigured` with the exact
+package/credential/call needed -- neither is reachable from the
+environment this was built in (no NDU license, no Nasdaq Data Link key).
 
 For an actual 2004-2026 run: burn-in from 2002, IS 2004-2017, OOS
 2018-2026 (`config.SAMPLE_WINDOW`). Running the backtest with `start=2002`

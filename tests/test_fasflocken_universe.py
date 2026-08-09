@@ -86,10 +86,32 @@ def test_constant_coherence_schedule_shape():
     assert np.all(out == 0.5)
 
 
-@pytest.mark.parametrize("cls", [NorgateProvider, SharadarProvider, EODHDProvider])
-def test_real_providers_fail_clearly_without_credentials(cls):
+@pytest.mark.parametrize("cls", [NorgateProvider, SharadarProvider])
+def test_stub_providers_fail_clearly_without_credentials(cls):
     with pytest.raises(DataProviderNotConfigured):
         cls()
+
+
+def test_eodhd_fails_clearly_without_credentials(monkeypatch):
+    # Hermetic regardless of the ambient environment: this repo's own dev
+    # session has a real EODHD_API_KEY set, so explicitly clear it here
+    # rather than relying on it being absent.
+    monkeypatch.delenv("EODHD_API_KEY", raising=False)
+    monkeypatch.delenv("EODHD_API_TOKEN", raising=False)
+    with pytest.raises(DataProviderNotConfigured):
+        EODHDProvider()
+
+
+def test_eodhd_constructs_with_explicit_token(tmp_path):
+    provider = EODHDProvider(api_token="dummy-token-not-a-real-key", cache_dir=str(tmp_path))
+    assert provider.api_token == "dummy-token-not-a-real-key"
+    assert provider.session is not None
+
+
+def test_eodhd_constructs_from_env_var(monkeypatch, tmp_path):
+    monkeypatch.setenv("EODHD_API_KEY", "dummy-token-from-env")
+    provider = EODHDProvider(cache_dir=str(tmp_path))
+    assert provider.api_token == "dummy-token-from-env"
 
 
 class _DynamicMembershipProvider(UniverseProvider):
