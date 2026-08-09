@@ -1836,7 +1836,7 @@
     "No (W, threshold) config keeps the primary HVG-KL estimator's Sharpe sign consistent across all three pre-registered sub-periods (2000-07 / 2008-12 / 2013-18) using only in-sample (2000-2018) data.",
     "DSR (OOS) excess <= 0: observed OOS Sharpe -0.136 does not exceed the expected best-of-80 Sharpe under a skill-less null (0.533).",
     "Baseline (c) [vol-z-score regime switching] matches or beats the irreversibility-driven strategy OOS -- irreversibility adds nothing beyond a plain volatility-timing regime switch.",
-    "Sign flips across sub-periods for the locked config: {'2000-07': np.float64(1.0), '2008-12': np.float64(1.0), '2013-18': np.float64(-1.0)}."
+    "Sign flips across sub-periods for the locked config: {'2000-07': 1.0, '2008-12': 1.0, '2013-18': -1.0}."
   ],
   "log": [
     "[    0.0s] Loading universe (12 ETFs, Yahoo chart API, cached to irreversibility_lab/data/)...",
@@ -1859,6 +1859,6 @@
     "[  551.9s]   - No (W, threshold) config keeps the primary HVG-KL estimator's Sharpe sign consistent across all three pre-registered sub-periods (2000-07 / 2008-12 / 2013-18) using only in-sample (2000-2018) data.",
     "[  551.9s]   - DSR (OOS) excess <= 0: observed OOS Sharpe -0.136 does not exceed the expected best-of-27 Sharpe under a skill-less null (0.441).",
     "[  551.9s]   - Baseline (c) [vol-z-score regime switching] matches or beats the irreversibility-driven strategy OOS -- irreversibility adds nothing beyond a plain volatility-timing regime switch.",
-    "[  551.9s]   - Sign flips across sub-periods for the locked config: {'2000-07': np.float64(1.0), '2008-12': np.float64(1.0), '2013-18': np.float64(-1.0)}."
+    "[  551.9s]   - Sign flips across sub-periods for the locked config: {'2000-07': 1.0, '2008-12': 1.0, '2013-18': -1.0}."
   ]
 }

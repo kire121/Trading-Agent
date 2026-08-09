@@ -164,7 +164,7 @@ def run(n_bootstrap=config.BOOTSTRAP_RUNS, out_path="irreversibility_lab/results
     if corr_tsmom_full is not None and not np.isnan(corr_tsmom_full) and corr_tsmom_full > config.TSMOM_CORR_REJECT:
         reasons.append(f"Correlation vs pure TSMOM ({corr_tsmom_full:.2f}) exceeds the "
                         f"{config.TSMOM_CORR_REJECT} hard limit -- this is TSMOM in disguise.")
-    sp_signs = [np.sign(v) for v in [primary_grid[(primary_grid.W == W) & (primary_grid.threshold == thr)]
+    sp_signs = [float(np.sign(v)) for v in [primary_grid[(primary_grid.W == W) & (primary_grid.threshold == thr)]
                 [f"sp_{name}_sharpe"].iloc[0] for name in config.SUBPERIODS]]
     if len(set(sp_signs)) > 1:
         reasons.append(f"Sign flips across sub-periods for the locked config: "
