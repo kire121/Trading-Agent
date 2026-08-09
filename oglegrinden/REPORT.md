@@ -76,7 +76,7 @@ negative. Charts: `results/equity_curves.png`, `results/signal_and_gate.png`.
 |---|---|---|
 | (a) Stationary block bootstrap of the gate series (block ≈13wk, 1,000 draws) | Actual gated Sharpe (-0.254 on the always-on return stream) is **worse than 91.4%** of randomly-block-permuted gate placements with the same ON-fraction (59.3%) and persistence (`p = 0.914`) | **Fails** — gate placement is not just uninformative, it's actively worse than random |
 | (b) Always-on baseline (must beat Sharpe *and* drawdown) | Primary Sharpe -0.196 < always-on's 0.016 (fails); primary max DD -41.0% is less negative than always-on's -49.2% (clears this one) | **Fails** (must beat both; only clears drawdown) |
-| (c) Twin gates must all be beaten by H1 | H1 loses to all three twins on Sharpe (full-sample and OOS) | **Fails** |
+| (c) Twin gates must all be beaten by H1 | `h1_beats_all_twins_full_sample = False`, `h1_beats_all_twins_oos = False` (formalized as `stats.beats_all_twins`, a direct Sharpe comparison of the four fully-backtested strategies) — H1 loses to all three twins on Sharpe, both full-sample and OOS | **Fails** |
 | (c′) Regression: does `b` on smoothed `L̃_t` survive controlling for ρ̄ and absorption ratio? | `b_L = 0.00037` (standardized), `t = 0.69`, `p = 0.49`, R² = 0.9% — statistically indistinguishable from zero | **Fails** — L̃ has no detectable independent forecasting power over forward reversal PnL, let alone power that survives controls |
 | DSR ≤ 0 (read as the underlying z-statistic, `SR_hat - SR0`, ≤ 0) in OOS | `z = -2.52`, DSR(probability) = 0.0058, against a null benchmark `SR0` implied by the 30-variant grid's own dispersion | **Fails decisively** |
 | >50% of PnL from one 8-week episode cluster | Total PnL over the full sample is *negative* (-35.6% cumulative), so a "share of profit" is not a meaningful ratio here — there is no profit to concentrate. The largest single 8-week window contributed +16.3 percentage points against a -35.6% total | **Not applicable / moot** — the strategy fails broadly, not because of one bad or one dominant-good cluster |
@@ -156,3 +156,41 @@ out-of-sample data and its own deflated-Sharpe scrutiny.
 Full artifacts: `results/results.json` (all statistics), `results/grid_table.csv`
 (all 30 variants), `results/is_oos_table.csv`, `results/equity_curves.png`,
 `results/signal_and_gate.png`.
+
+## 7. Implementation review
+
+Before treating the above as final, the implementation went through an
+independent multi-pass adversarial review (separate agents, each
+attempting to *refute* the other's findings) covering three areas: the
+persistent-homology/absorption-ratio math (`topology.py`), the
+statistical null tests including the deflated Sharpe ratio formula and
+stationary block bootstrap (`stats.py`), and the backtest execution/cost/
+point-in-time mechanics (`backtest.py`, `portfolio.py`, `signal.py`).
+
+Four minor issues were confirmed real and fixed:
+
+1. `correlation_distance` didn't reject a zero-variance (frozen/stale-feed)
+   return column, which would have made pandas emit `NaN` correlations
+   that `ripser` silently mishandles rather than erroring on — now raises
+   explicitly, and `signal.py` drops such tickers from that week's
+   universe rather than letting one bad feed break the whole run.
+2. No test covered that scenario — added.
+3. Rule (c) ("H1 must beat all three twins") was only tested indirectly
+   via the regression control, not as the literal Sharpe comparison the
+   brief specifies — added `stats.beats_all_twins` and wired it into
+   `rejection_criteria` (`h1_beats_all_twins_full_sample/_oos` above).
+4. The post-cap price-validity filter in `run_backtest` could drop a name
+   *after* weights were already constructed, which would leave that
+   week's gross exposure silently short of target instead of properly
+   renormalizing — fixed by filtering to tradable names *before*
+   constructing weights, so winsorization/demeaning/capping run over the
+   truly tradable set.
+
+None of the four ever fired against the actual data used for this report
+— independently verified line-by-line by the review's verification pass,
+and confirmed empirically here by re-running the full pipeline after the
+fixes: every headline number (Sharpe, DSR, bootstrap p-value, regression
+coefficients) is byte-identical before and after. They are fixed anyway
+because leaving a known, reachable-in-principle correctness gap in a
+research codebase is bad practice regardless of whether it happened to
+bite on this particular sample.

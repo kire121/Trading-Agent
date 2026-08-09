@@ -58,6 +58,17 @@ class TestCorrelationDistance:
         with pytest.raises(ValueError):
             correlation_distance(returns)
 
+    def test_rejects_zero_variance_column_instead_of_producing_nan_correlations(self):
+        """A frozen/stale feed (exactly constant return over the whole
+        window) contains no NaNs but makes Pearson correlation 0/0 = NaN
+        for that column. This must raise loudly rather than let NaN
+        silently leak into the distance matrix ripser is fed (ripser does
+        not error on NaN edges -- it just corrupts the diagram)."""
+        returns = _single_factor_returns(n_assets=6, t=60)
+        returns["A2"] = 0.0  # constant column, zero variance
+        with pytest.raises(ValueError, match="zero-variance"):
+            correlation_distance(returns)
+
 
 class TestTotalH1Persistence:
     def test_single_factor_world_has_no_persistent_loops(self):

@@ -23,6 +23,7 @@ from oglegrinden.stats import (
     deflated_sharpe_ratio,
     block_bootstrap_gate_test,
     gated_vs_always_on,
+    beats_all_twins,
     twin_gate_regression,
     max_pnl_concentration,
     subperiod_sign_check,
@@ -163,6 +164,17 @@ def main():
     )
     reg_no_model = {k: v for k, v in reg.items() if k != "model"}
 
+    # Literal rule (c): "H1 maste sla alla tre [twins], annars tillfor
+    # topologin inget" -- a direct Sharpe comparison of the fully
+    # backtested strategies, distinct from (and in addition to) the
+    # regression-control test above.
+    twin_returns = {k: v.weekly_returns for k, v in twins.items()}
+    twin_comparison_full = beats_all_twins(primary.weekly_returns, twin_returns)
+    twin_comparison_oos = beats_all_twins(
+        primary_oos,
+        {k: v[v.index >= OOS_START] for k, v in twin_returns.items()},
+    )
+
     concentration = max_pnl_concentration(primary.weekly_returns, window=8)
 
     subperiod = subperiod_sign_check(
@@ -193,8 +205,16 @@ def main():
         "dsr_oos_le_zero": dsr_oos["z"] <= 0.0,
         "dsr_oos_z": dsr_oos["z"],
         "dsr_oos_value": dsr_oos["dsr"],
-        "twin_explains_all": reg_no_model["p_L"] > 0.05,
+        # Regression-control reading of rule (c): does b_L survive
+        # controlling for rho_bar/absorption ratio?
+        "twin_regression_insignificant": reg_no_model["p_L"] > 0.05,
         "twin_gate_p_L": reg_no_model["p_L"],
+        # Literal reading of rule (c): does H1 beat all three fully
+        # backtested twin gates on Sharpe? ("annars tillfor topologin
+        # inget" -- if not, the topology signal adds nothing.)
+        "h1_beats_all_twins_full_sample": twin_comparison_full["beats_all_twins"],
+        "h1_beats_all_twins_oos": twin_comparison_oos["beats_all_twins"],
+        "twin_explains_all": reg_no_model["p_L"] > 0.05 or not twin_comparison_full["beats_all_twins"],
         "pnl_concentration_gt_50pct": (concentration["share"] or 0) > 0.5,
         "pnl_concentration_share": concentration["share"],
         "subperiod_sign_flip": None,  # filled below
@@ -221,6 +241,7 @@ def main():
         "dsr_oos": dsr_oos,
         "block_bootstrap": {k: v for k, v in boot.items() if k != "boot_sharpes"},
         "twin_gate_regression": reg_no_model,
+        "twin_gate_literal_comparison": {"full_sample": twin_comparison_full, "oos": twin_comparison_oos},
         "pnl_concentration": concentration,
         "subperiod_sign_check": subperiod,
         "rejection_criteria": rejection,

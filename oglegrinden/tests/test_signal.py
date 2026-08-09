@@ -6,7 +6,9 @@ from oglegrinden.signal import (
     smooth_median4,
     expanding_percentile,
     hysteresis_gate,
+    compute_raw_signal_series,
 )
+from oglegrinden.tests.test_backtest import _make_synthetic_panel
 
 
 def test_weekly_fridays_picks_last_trading_day_per_week():
@@ -77,3 +79,22 @@ def test_hysteresis_gate_nan_holds_previous_state():
     pct = pd.Series([70.0, np.nan, np.nan, 20.0])
     gate = hysteresis_gate(pct, upper=60, lower=40, direction="primary")
     assert list(gate) == [True, True, True, False]
+
+
+def test_compute_raw_signal_series_drops_frozen_ticker_instead_of_crashing():
+    """A ticker whose price is frozen for a stretch >= corr_window has zero
+    variance over that window, which would otherwise make
+    correlation_distance raise. compute_raw_signal_series must exclude
+    that ticker from the week's cloud rather than let one stale feed kill
+    the whole signal computation (regression test for a real, if never
+    fired on live data, bug found in adversarial review)."""
+    panel = _make_synthetic_panel(n_tickers=20, n_days=300, seed=9)
+    frozen_ticker = "T05"
+    panel.close.loc[:, frozen_ticker] = panel.close[frozen_ticker].iloc[0]
+    panel.adjclose.loc[:, frozen_ticker] = panel.adjclose[frozen_ticker].iloc[0]
+    panel.log_returns[frozen_ticker] = 0.0
+
+    raw = compute_raw_signal_series(panel, corr_window=60, min_universe_size=15)
+    assert len(raw) > 0
+    assert raw["L"].notna().all()
+    assert raw["n_assets"].max() <= 19  # frozen ticker never counted

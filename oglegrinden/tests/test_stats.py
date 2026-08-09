@@ -12,6 +12,7 @@ from oglegrinden.stats import (
     twin_gate_regression,
     max_pnl_concentration,
     subperiod_sign_check,
+    beats_all_twins,
 )
 
 
@@ -152,6 +153,37 @@ def test_subperiod_sign_check_handles_series_with_different_indices():
     assert results[0]["insufficient_data"] is True
     assert results[1]["insufficient_data"] is False
     assert "b_L" in results[1]
+
+
+def test_beats_all_twins_true_when_primary_strictly_best():
+    # Deterministic (noiseless-relative-to-gap) series: small sinusoidal
+    # wiggle keeps std > 0 without swamping the mean-return gap that
+    # separates primary from every twin, avoiding a flaky random draw.
+    idx = pd.date_range("2010-01-01", periods=200, freq="W-FRI")
+    wiggle = np.sin(np.arange(200)) * 1e-5
+    primary = pd.Series(0.002 + wiggle, index=idx)
+    twins = {
+        "rho_bar": pd.Series(0.0005 + wiggle, index=idx),
+        "absorption_ratio": pd.Series(0.0003 + wiggle, index=idx),
+        "index_vol": pd.Series(0.0001 + wiggle, index=idx),
+    }
+    result = beats_all_twins(primary, twins)
+    assert result["beats_all_twins"] is True
+    assert all(v["primary_beats_twin"] for v in result["per_twin"].values())
+
+
+def test_beats_all_twins_false_when_one_twin_wins():
+    idx = pd.date_range("2010-01-01", periods=200, freq="W-FRI")
+    rng = np.random.default_rng(11)
+    primary = pd.Series(0.0005 + rng.normal(0, 0.01, 200), index=idx)
+    twins = {
+        "rho_bar": pd.Series(0.003 + rng.normal(0, 0.01, 200), index=idx),  # clearly better
+        "absorption_ratio": pd.Series(0.0001 + rng.normal(0, 0.01, 200), index=idx),
+    }
+    result = beats_all_twins(primary, twins)
+    assert result["beats_all_twins"] is False
+    assert result["per_twin"]["rho_bar"]["primary_beats_twin"] is False
+    assert result["per_twin"]["absorption_ratio"]["primary_beats_twin"] is True
 
 
 def test_max_pnl_concentration_flags_single_dominant_window():

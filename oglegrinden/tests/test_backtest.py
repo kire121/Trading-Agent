@@ -77,6 +77,32 @@ def test_backtest_all_on_respects_cap_and_charges_costs():
     )
 
 
+def test_backtest_missing_open_price_does_not_leave_gross_exposure_short():
+    """If one name has an unusable (NaN) entry price on a given trading
+    day, it must be excluded *before* weights are constructed -- not
+    dropped from an already-computed weight vector, which would silently
+    leave that week's gross exposure below the 100% target (regression
+    test for a real, if never fired on live data, bug found in
+    adversarial review)."""
+    panel = _make_synthetic_panel(n_tickers=20, n_days=300, seed=6)
+    all_fridays = weekly_fridays(panel.close.index)
+    gate_on = pd.Series(True, index=all_fridays)
+    bundle = _FakeBundle(gate_on)
+
+    # find a real entry date well past warmup and null out one ticker's
+    # open price on it (close/adjclose stay valid, only the open used for
+    # execution is broken).
+    warmup_weeks = 13
+    t = all_fridays[warmup_weeks + 5]
+    entry_date = next_trading_day(panel.close.index, t)
+    panel.open.loc[entry_date, "T03"] = np.nan
+
+    result = run_backtest(panel, bundle, all_fridays, signal_name="L", direction="primary", formation_days=5, cap=0.15)
+    n_at_t = result.n_names.loc[t]
+    if n_at_t > 0:  # T03 was actually in that week's tradable set
+        assert result.gross_exposure.loc[t] >= min(1.0, n_at_t * 0.15) - 1e-6
+
+
 def test_backtest_reversal_extracts_positive_gross_pnl_on_mean_reverting_data():
     """The whole point of the strategy: on genuinely mean-reverting
     cross-sectional data, buying losers / selling winners should have

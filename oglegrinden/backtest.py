@@ -112,17 +112,29 @@ def run_backtest(
             continue
 
         f = formation_window.sum(axis=0)  # cumulative log return over the formation window
-        w = formation_weights(f, cap=cap, winsor_k=winsor_k)
 
-        entry_px = adj_open.loc[entry_date, w.index]
-        exit_px = adj_open.loc[exit_date, w.index]
-        valid = entry_px.notna() & exit_px.notna() & (entry_px > 0)
-        w = w[valid]
+        # Restrict to names with a usable (adjusted) entry and exit price
+        # *before* constructing weights, not after: winsorization,
+        # demeaning, and capping must run over the actually-tradable set,
+        # or dropping names post-hoc would silently leave gross exposure
+        # below the 100% target and perturb dollar-neutrality for names
+        # that happen to have a missing/invalid open price that week.
+        entry_px_candidates = adj_open.loc[entry_date, f.index]
+        exit_px_candidates = adj_open.loc[exit_date, f.index]
+        tradable = entry_px_candidates.notna() & exit_px_candidates.notna() & (entry_px_candidates > 0)
+        f = f[tradable]
+        if f.shape[0] < min_names_to_trade:
+            _append_flat(entry_date, exit_date)
+            continue
+
+        w = formation_weights(f, cap=cap, winsor_k=winsor_k)
         if w.empty:
             _append_flat(entry_date, exit_date)
             continue
 
-        simple_ret = exit_px[w.index] / entry_px[w.index] - 1.0
+        entry_px = adj_open.loc[entry_date, w.index]
+        exit_px = adj_open.loc[exit_date, w.index]
+        simple_ret = exit_px / entry_px - 1.0
         gross_exposure = w.abs().sum()
         gross_pnl = float((w * simple_ret).sum())
         week_cost = gross_exposure * 2.0 * cost_frac_per_side  # entry + exit, full turnover

@@ -59,6 +59,10 @@ def compute_raw_signal_series(
             continue
         window = panel.log_returns.loc[:t, eligible].tail(corr_window)
         window = window.dropna(axis=1, how="any")
+        # A frozen/stale feed (zero variance over the whole window) makes
+        # correlation_distance() raise; drop such tickers from this week's
+        # cloud rather than let one bad feed kill the whole run.
+        window = window.loc[:, window.std(ddof=0) > 0]
         if window.shape[1] < min_universe_size or window.shape[0] < corr_window:
             continue
 

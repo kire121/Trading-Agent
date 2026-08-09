@@ -52,6 +52,19 @@ def correlation_distance(returns_window: pd.DataFrame, min_periods: Optional[int
             "correlation_distance: returns_window contains NaNs; caller must "
             "restrict to assets with complete history over the window"
         )
+    zero_var = returns_window.columns[(returns_window.std(ddof=0) == 0)]
+    if len(zero_var):
+        # A frozen/stale feed (constant return over the whole window) makes
+        # Pearson correlation 0/0 = NaN for that column. pandas.corr()
+        # would silently emit those NaNs into the distance matrix, which
+        # ripser then treats as "never connects" without raising -- a
+        # silent corruption of the persistence diagram rather than a loud
+        # failure. Reject explicitly instead; the caller is responsible
+        # for dropping such assets from the window before calling this.
+        raise ValueError(
+            f"correlation_distance: zero-variance (constant) column(s) {list(zero_var)} "
+            "would produce NaN correlations; caller must drop them from the window first"
+        )
     corr = returns_window.corr(method="pearson")
     # Numerical noise can push (1 - rho) fractionally negative on the
     # diagonal or for rho fractionally > 1 between near-duplicate columns;

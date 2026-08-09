@@ -145,6 +145,44 @@
     "p_absorption_ratio": 0.9935419749987183,
     "r_squared": 0.008531808339385716
   },
+  "twin_gate_literal_comparison": {
+    "full_sample": {
+      "primary_sharpe": -0.19586729563147862,
+      "per_twin": {
+        "rho_bar": {
+          "twin_sharpe": 0.2537719880567391,
+          "primary_beats_twin": false
+        },
+        "absorption_ratio": {
+          "twin_sharpe": 0.1722978062351268,
+          "primary_beats_twin": false
+        },
+        "index_vol": {
+          "twin_sharpe": 0.25001149738018524,
+          "primary_beats_twin": false
+        }
+      },
+      "beats_all_twins": false
+    },
+    "oos": {
+      "primary_sharpe": -0.18063801528744375,
+      "per_twin": {
+        "rho_bar": {
+          "twin_sharpe": 0.6332876418737801,
+          "primary_beats_twin": false
+        },
+        "absorption_ratio": {
+          "twin_sharpe": 0.7427062734646673,
+          "primary_beats_twin": false
+        },
+        "index_vol": {
+          "twin_sharpe": 0.6075252122638115,
+          "primary_beats_twin": false
+        }
+      },
+      "beats_all_twins": false
+    }
+  },
   "pnl_concentration": {
     "share": -0.45746960585222535,
     "window": 8,
@@ -203,8 +241,11 @@
     "dsr_oos_le_zero": true,
     "dsr_oos_z": -2.5211174182185765,
     "dsr_oos_value": 0.005849140446715787,
-    "twin_explains_all": true,
+    "twin_regression_insignificant": true,
     "twin_gate_p_L": 0.4884598538986281,
+    "h1_beats_all_twins_full_sample": false,
+    "h1_beats_all_twins_oos": false,
+    "twin_explains_all": true,
     "pnl_concentration_gt_50pct": false,
     "pnl_concentration_share": -0.45746960585222535,
     "subperiod_sign_flip": false,

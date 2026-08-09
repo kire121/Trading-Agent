@@ -220,7 +220,33 @@ def gated_vs_always_on(gated_returns: pd.Series, always_on_returns: pd.Series, p
 
 
 # ---------------------------------------------------------------------------
-# (c) Twin-gate regression: does L survive controlling for rho_bar / AR?
+# (c) Twin gates: the spec's literal requirement is "H1 must beat all three
+# (rho_bar, absorption ratio, index vol), otherwise the topology adds
+# nothing" -- a direct Sharpe/DSR comparison of the four fully-backtested
+# strategies, distinct from (and complementary to) the regression-control
+# test below.
+# ---------------------------------------------------------------------------
+
+def beats_all_twins(primary_returns: pd.Series, twin_returns: dict, periods_per_year: int = 52) -> dict:
+    """Literal rule (c): does the H1-gated strategy's Sharpe ratio exceed
+    every one of the twin-gated strategies' Sharpe ratios (same backtest
+    mechanics, only the raw signal driving the gate differs)?
+    `twin_returns` maps twin name -> its weekly net-return series.
+    """
+    primary_sharpe = sharpe_ratio(primary_returns, periods_per_year)
+    per_twin = {}
+    for name, returns in twin_returns.items():
+        twin_sharpe = sharpe_ratio(returns, periods_per_year)
+        per_twin[name] = {"twin_sharpe": twin_sharpe, "primary_beats_twin": primary_sharpe > twin_sharpe}
+    return {
+        "primary_sharpe": primary_sharpe,
+        "per_twin": per_twin,
+        "beats_all_twins": all(v["primary_beats_twin"] for v in per_twin.values()) if per_twin else None,
+    }
+
+
+# ---------------------------------------------------------------------------
+# (c') Twin-gate regression: does L survive controlling for rho_bar / AR?
 # ---------------------------------------------------------------------------
 
 def twin_gate_regression(
