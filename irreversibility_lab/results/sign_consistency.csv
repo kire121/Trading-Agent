@@ -1,0 +1,10 @@
+W,threshold,majority_sign,n_estimators_agreeing,passes_2of3,subperiod_consistent_by_estimator,passes_subperiod_consistency
+125,0.25,-1.0,2,True,"{'hvg': True, 'ordinal': True, 'psi': False}",True
+125,0.5,-1.0,2,True,"{'hvg': True, 'ordinal': False, 'psi': False}",True
+125,1.0,1.0,2,True,"{'hvg': False, 'ordinal': False, 'psi': False}",False
+250,0.25,-1.0,2,True,"{'hvg': False, 'ordinal': False, 'psi': False}",False
+250,0.5,-1.0,2,True,"{'hvg': False, 'ordinal': False, 'psi': False}",False
+250,1.0,1.0,2,True,"{'hvg': False, 'ordinal': False, 'psi': False}",False
+500,0.25,1.0,2,True,"{'hvg': False, 'ordinal': False, 'psi': False}",False
+500,0.5,-1.0,2,True,"{'hvg': False, 'ordinal': False, 'psi': False}",False
+500,1.0,1.0,3,True,"{'hvg': False, 'ordinal': False, 'psi': True}",True
