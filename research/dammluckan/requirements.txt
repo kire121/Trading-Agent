@@ -4,3 +4,9 @@ scipy
 statsmodels
 certifi
 pytest
+
+# Only needed for build_pdf.py (generating Dammluckan.pdf); not used by the
+# research pipeline itself.
+weasyprint
+markdown
+pygments
