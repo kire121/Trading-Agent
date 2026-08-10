@@ -153,6 +153,53 @@ def test_daily_returns_hand_computed_three_day_hold():
     assert abs(rets.iloc[3] - expected_day3) < 1e-12
 
 
+def test_solve_k_for_target_vol_converges_when_gross_cap_binds():
+    """Regression test: a single-shot linear rescale (k_final = k0 *
+    target/vol(k0)) overshoots when the 200% gross cap binds, because the
+    k->vol relationship stops being linear once positions get haircut.
+    _solve_k_for_target_vol must iterate to convergence instead. Construct a
+    scenario with moderate cap pressure (staggered entries, realistic vol,
+    so several -- not all, not just one -- positions get haircut) and show
+    the iterative solve lands materially closer to the target than the
+    single-shot linear rescale it replaced."""
+    n = 550
+    dates = pd.bdate_range("2020-01-01", periods=n)
+    rng = np.random.default_rng(5)
+    closes = pd.DataFrame(
+        {f"T{i}": 100 * np.exp(np.cumsum(rng.normal(0, 0.012, n))) for i in range(20)}, index=dates
+    )
+    vol = pd.DataFrame(1_000_000.0, index=dates, columns=closes.columns)
+    panel = data.Panel(tickers=list(closes.columns), raw_close=closes, raw_open=closes, high=closes,
+                        low=closes, adj_close=closes, adj_open=closes, volume=vol)
+    # Staggered, long-overlapping windows -> the cap binds for a sustained
+    # stretch across many (not all) names, closer to the real Donchian-twin
+    # dynamics that exposed the original single-shot bug.
+    admitted = [_candidate(f"T{i}", 1, entry_pos=20 + 5 * i, exit_pos=350 + 5 * i) for i in range(20)]
+
+    target_vol = 0.08
+    k_final, _ = backtest._solve_k_for_target_vol(
+        panel, admitted, is_start=dates[0], is_end=dates[-1], target_vol=target_vol, gross_cap=config.GROSS_CAP,
+    )
+    achieved_vol_iterative = backtest.annualized_vol(
+        backtest.daily_returns(panel, backtest.assign_weights(panel, admitted, k_final, gross_cap=config.GROSS_CAP))
+        .loc[dates[0]:dates[-1]]
+    )
+
+    # The single-shot approach the fix replaced: one linear rescale from k0.
+    trades0 = backtest.assign_weights(panel, admitted, target_vol, gross_cap=config.GROSS_CAP)
+    vol_at_k0 = backtest.annualized_vol(backtest.daily_returns(panel, trades0).loc[dates[0]:dates[-1]])
+    k_single_shot = target_vol * (target_vol / vol_at_k0)
+    achieved_vol_single_shot = backtest.annualized_vol(
+        backtest.daily_returns(panel, backtest.assign_weights(panel, admitted, k_single_shot, gross_cap=config.GROSS_CAP))
+        .loc[dates[0]:dates[-1]]
+    )
+
+    err_iterative = abs(achieved_vol_iterative - target_vol) / target_vol
+    err_single_shot = abs(achieved_vol_single_shot - target_vol) / target_vol
+    assert err_iterative < 0.05          # iterative solve lands within 5% of target
+    assert err_iterative < err_single_shot  # and strictly beats the single-shot approach it replaced
+
+
 def test_assign_weights_gross_cap_haircut():
     # Many simultaneous candidates with huge raw weight (tiny sigma_hat) must
     # be haircut so total gross never exceeds config.GROSS_CAP.

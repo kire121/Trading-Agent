@@ -44,7 +44,7 @@ class Trade(CandidateTrade):
 
 def inverse_vol_weight(sigma_hat: float, k: float) -> float:
     """w_i magnitude = k / sigma_hat_i (k plays the role of sigma_target,
-    solved for by portfolio.calibrate_vol_scalar so ex-ante portfolio vol
+    solved for by backtest._solve_k_for_target_vol so ex-ante portfolio vol
     ~= config.PORTFOLIO_VOL_TARGET)."""
     if sigma_hat is None or not np.isfinite(sigma_hat) or sigma_hat <= 0:
         return 0.0

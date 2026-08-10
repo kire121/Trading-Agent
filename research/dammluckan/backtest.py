@@ -199,6 +199,33 @@ def annualized_vol(returns: pd.Series) -> float:
     return metrics.ann_vol(returns)
 
 
+def _solve_k_for_target_vol(panel, admitted, is_start, is_end, target_vol, gross_cap,
+                             k0=None, max_iter=25, tol=1e-4):
+    """
+    Iterative rescale to the target IS vol. A single-shot linear rescale
+    (k_final = k0 * target/vol(k0)) is only exact when the gross cap never
+    binds; when it does (e.g. the Donchian twin, which runs far more
+    concurrent positions and saturates the 200% cap far more often), the
+    k->vol relationship is no longer linear and a single shot overshoots.
+    Iterating the same ratio-rescale to a fixed point corrects for this
+    without assuming linearity -- it only needs the map to be locally
+    well-behaved near the fixed point, not globally linear.
+    """
+    k = k0 if k0 is not None else target_vol
+    vol = np.nan
+    for _ in range(max_iter):
+        trades = assign_weights(panel, admitted, k, gross_cap=gross_cap)
+        rets = daily_returns(panel, trades)
+        vol = annualized_vol(rets.loc[is_start:is_end])
+        if not (np.isfinite(vol) and vol > 0):
+            break
+        rel_err = abs(vol - target_vol) / target_vol
+        if rel_err < tol:
+            break
+        k = k * (target_vol / vol)
+    return k, vol
+
+
 def run_is_oos(panel, sig, theta_high, theta_low, h, is_start=config.IS_START, is_end=config.IS_END,
                target_vol=config.PORTFOLIO_VOL_TARGET, gross_cap=config.GROSS_CAP,
                max_concurrent=config.MAX_CONCURRENT, comparator="ge"):
@@ -208,17 +235,14 @@ def run_is_oos(panel, sig, theta_high, theta_low, h, is_start=config.IS_START, i
     warm-up buffer only, present so the largest grid window (n=160) has a
     full rolling lookback by the first IS date), with the vol-target scalar
     k calibrated using ONLY the [is_start, is_end] slice of realized returns
-    and then frozen for the whole sample (so OOS-1 sizing never peeks at
-    OOS-1 vol). Returns full/IS/OOS-1 daily-return series plus the blotter.
+    (iteratively, to converge despite the 200% gross cap's nonlinearity) and
+    then frozen for the whole sample (so OOS-1 sizing never peeks at OOS-1
+    vol). Returns full/IS/OOS-1 daily-return series plus the blotter.
     """
     candidates = generate_candidates(panel, sig, theta_high, theta_low, h, comparator=comparator)
     admitted = admit_candidates(candidates, max_concurrent=max_concurrent)
 
-    k0 = target_vol
-    trades0 = assign_weights(panel, admitted, k0, gross_cap=gross_cap)
-    rets0 = daily_returns(panel, trades0)
-    vol_is_at_k0 = annualized_vol(rets0.loc[is_start:is_end])
-    k_final = k0 * (target_vol / vol_is_at_k0) if np.isfinite(vol_is_at_k0) and vol_is_at_k0 > 0 else k0
+    k_final, vol_is_at_k0 = _solve_k_for_target_vol(panel, admitted, is_start, is_end, target_vol, gross_cap)
 
     trades = assign_weights(panel, admitted, k_final, gross_cap=gross_cap)
     rets = daily_returns(panel, trades)
@@ -232,22 +256,3 @@ def run_is_oos(panel, sig, theta_high, theta_low, h, is_start=config.IS_START, i
     }
 
 
-def calibrate_vol_scalar(panel, sig, theta_high, theta_low, h, target_vol=config.PORTFOLIO_VOL_TARGET,
-                          gross_cap=config.GROSS_CAP, max_concurrent=config.MAX_CONCURRENT,
-                          comparator="ge") -> float:
-    """Single-shot linear rescale: run once at k=annualized-vol-units of 1.0
-    (i.e. k expressed directly as an annualized per-position vol target),
-    measure realized portfolio vol, rescale k proportionally. Valid as long
-    as the gross cap doesn't bind materially at either k -- checked by the
-    caller (run_calibration reports achieved gross utilization). Every
-    strategy variant (primary, Donchian twin, anti-twin) gets its own k so
-    each is independently targeting the same 8% ex-ante vol -- an
-    apples-to-apples sizing convention, not just an apples-to-apples signal."""
-    k0 = target_vol  # sane starting scale: same order of magnitude as target
-    res0 = run_backtest(panel, sig, theta_high, theta_low, h, k=k0,
-                         gross_cap=gross_cap, max_concurrent=max_concurrent, comparator=comparator)
-    vol0 = annualized_vol(res0["returns"])
-    if not np.isfinite(vol0) or vol0 <= 0:
-        return k0
-    k_final = k0 * (target_vol / vol0)
-    return k_final
