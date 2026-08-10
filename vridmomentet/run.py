@@ -48,8 +48,8 @@ from vridmomentet import config, grid, stats
 from vridmomentet.backtest import BacktestResult, benchmark_weekly_returns, run_backtest, weekly_decision_dates
 from vridmomentet.data import Panel, build_panel
 from vridmomentet.portfolio import PortfolioParams
-from vridmomentet.signal import SignalParams, compute_signal, formation_return
-from vridmomentet.twins import TWINS, compute_all_twins
+from vridmomentet.signal import SignalParams, compute_signal
+from vridmomentet.twins import compute_all_twins
 from vridmomentet.universe import EODHDProvider, UniverseProvider
 
 RESULTS_DIR = os.path.join(os.path.dirname(__file__), "results")

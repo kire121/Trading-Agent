@@ -138,15 +138,32 @@ class TestRunBacktestMechanics:
         assert set(bt.longs_by_date[decisions[0]]) == set(bt.longs_by_date[decisions[1]])
         assert set(bt.shorts_by_date[decisions[0]]) == set(bt.shorts_by_date[decisions[1]])
 
-    def test_costs_reduce_gross_return_by_turnover_times_round_trip_bps(self):
+    def test_costs_reduce_gross_return_by_turnover_times_one_way_bps(self):
         panel, signal, dates = self._two_week_setup()
         decisions = pd.DatetimeIndex([pd.Timestamp("2024-01-05"), pd.Timestamp("2024-01-12")])
         params = PortfolioParams(n_buckets=2, gross_per_leg=0.5, per_name_cap=0.5, min_names_per_leg=2)
         costs = CostModel(commission_bps_per_side=2.0, half_spread_bps=5.0)
         bt = run_backtest(panel, signal, decisions, params, costs, price_min=0, adv_min=0)
-        expected_cost = bt.weekly_turnover * (costs.round_trip_bps() / 10_000.0)
+        expected_cost = bt.weekly_turnover * (costs.one_way_bps() / 10_000.0)
         pd.testing.assert_series_equal(bt.weekly_costs, expected_cost, check_names=False)
         pd.testing.assert_series_equal(bt.weekly_returns, bt.weekly_gross_returns - expected_cost, check_names=False)
+
+    def test_costs_hand_computed_example_not_double_counted(self):
+        """Concrete, hand-computed check independent of the production cost
+        formula (guards against a formula and its test drifting together):
+        week 1 starts from flat, so turnover == the full entry gross
+        (1.0 = 0.5 long + 0.5 short here). Trading $1.00 total notional at
+        7bps one-way (2bp commission + 5bp half-spread) costs exactly
+        $0.0007 -- not $0.0014, which is what charging the round-trip rate
+        (14bps) against this same $1.00 would give.
+        """
+        panel, signal, dates = self._two_week_setup()
+        decisions = pd.DatetimeIndex([pd.Timestamp("2024-01-05"), pd.Timestamp("2024-01-12")])
+        params = PortfolioParams(n_buckets=2, gross_per_leg=0.5, per_name_cap=0.5, min_names_per_leg=2)
+        costs = CostModel(commission_bps_per_side=2.0, half_spread_bps=5.0)
+        bt = run_backtest(panel, signal, decisions, params, costs, price_min=0, adv_min=0)
+        assert bt.weekly_turnover.iloc[0] == pytest.approx(1.0, abs=1e-6)
+        assert bt.weekly_costs.iloc[0] == pytest.approx(0.0007, abs=1e-9)
 
     def test_delisted_name_mid_week_uses_last_trade_not_nan(self):
         panel, signal, dates = self._two_week_setup()

@@ -96,10 +96,12 @@ DEFAULT_PORTFOLIO_PARAMS = PortfolioParams()
 
 # --------------------------------------------------------------------------
 # Execution timing (brief: Friday close signal; Monday close primary,
-# Monday open variant; full weekly replacement; no stops/discretion)
+# Monday open variant; full weekly replacement; no stops/discretion).
+# The Friday decision date itself is derived structurally in
+# backtest.py::weekly_decision_dates ("last trading day of the ISO week",
+# holiday-robust) rather than checked against an explicit weekday number.
 # --------------------------------------------------------------------------
 
-SIGNAL_WEEKDAY = 4    # Friday (Monday=0 .. Sunday=6)
 EXECUTION_VARIANTS = ("monday_close", "monday_open")
 PRIMARY_EXECUTION = "monday_close"
 
@@ -117,9 +119,24 @@ class CostModel:
     commission_bps_per_side: float = 2.0
     half_spread_bps: float = 5.0
 
+    def one_way_bps(self) -> float:
+        """Cost per $1 of ONE-WAY trading (executing a single buy or sell).
+        This is the rate to multiply against `portfolio.turnover()`, which
+        already sums both legs of a trade (sum(|new_w - prev_w|) counts a
+        name's exit AND another name's entry separately) -- multiplying an
+        already-both-sides turnover figure by a round-trip rate would
+        double-count every dollar actually traded.
+        """
+        return self.commission_bps_per_side + self.half_spread_bps
+
     def round_trip_bps(self) -> float:
-        """Commission + spread, charged on entry AND exit (full weekly turnover)."""
-        return 2.0 * (self.commission_bps_per_side + self.half_spread_bps)
+        """Cost of a complete buy-then-later-sell round trip on a SINGLE
+        fixed $1 position (i.e. one_way_bps() charged twice). Provided for
+        reference/alternate turnover conventions; NOT the rate to use
+        against portfolio.turnover()'s sum-of-both-legs figure -- see
+        one_way_bps().
+        """
+        return 2.0 * self.one_way_bps()
 
 
 DEFAULT_COSTS = CostModel()
@@ -176,5 +193,4 @@ DEFAULT_REJECTION = RejectionThresholds()
 
 PNL_CONCENTRATION_WINDOW_WEEKS = 8
 
-TRADING_DAYS_PER_YEAR = 252
 WEEKS_PER_YEAR = 52

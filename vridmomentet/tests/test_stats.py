@@ -139,13 +139,18 @@ class TestPnlConcentration:
 
 
 class TestEvaluateRejection:
+    def _passing_shuffle(self, fraction=0.25):
+        # Comfortably above the 5% nominal null rate / 10% shuffle_p_max
+        # threshold -- reads as genuine excess order information.
+        return {"by_block_size": {1: {"fraction_exceeding_95th_pct_null": fraction}, 4: {"fraction_exceeding_95th_pct_null": fraction}}}
+
     def test_all_criteria_pass_gives_no_rejection(self):
         dsr = {"z": 2.0}
         bootstrap = {"p_value": 0.01}
         twins = {"beats_all_twins": True}
         concentration = {"share": 0.1}
         sign = {"sign_stable": True}
-        result = stats.evaluate_rejection(dsr, bootstrap, {}, twins, concentration, sign, pead_delta_sharpe=0.5)
+        result = stats.evaluate_rejection(dsr, bootstrap, self._passing_shuffle(), twins, concentration, sign, pead_delta_sharpe=0.5)
         assert result["reject"] is False
 
     def test_single_failing_criterion_triggers_rejection(self):
@@ -154,10 +159,37 @@ class TestEvaluateRejection:
         twins = {"beats_all_twins": True}
         concentration = {"share": 0.1}
         sign = {"sign_stable": True}
-        result = stats.evaluate_rejection(dsr, bootstrap, {}, twins, concentration, sign, pead_delta_sharpe=0.5)
+        result = stats.evaluate_rejection(dsr, bootstrap, self._passing_shuffle(), twins, concentration, sign, pead_delta_sharpe=0.5)
         assert result["reject"] is True
         assert result["reasons"]["dsr_oos_z_leq_threshold"] is True
         assert result["reasons"]["bootstrap_p_geq_threshold"] is False
+
+    def test_shuffle_null_at_nominal_rate_triggers_rejection(self):
+        """The brief's own primary pre-registered null (Huvudnull) must
+        actually gate the verdict: a shuffle-null exceedance fraction at or
+        below the nominal ~5% false-positive rate (i.e. no detectable
+        excess order information) has to be wired into `reasons`, not just
+        reported and ignored.
+        """
+        dsr = {"z": 2.0}
+        bootstrap = {"p_value": 0.01}
+        twins = {"beats_all_twins": True}
+        concentration = {"share": 0.1}
+        sign = {"sign_stable": True}
+        no_signal_shuffle = {"by_block_size": {1: {"fraction_exceeding_95th_pct_null": 0.05}}}
+        result = stats.evaluate_rejection(dsr, bootstrap, no_signal_shuffle, twins, concentration, sign, pead_delta_sharpe=0.5)
+        assert result["reject"] is True
+        assert result["reasons"]["shuffle_null_shows_no_excess_order_information"] is True
+
+    def test_missing_shuffle_data_is_treated_as_a_failure_not_silently_ignored(self):
+        dsr = {"z": 2.0}
+        bootstrap = {"p_value": 0.01}
+        twins = {"beats_all_twins": True}
+        concentration = {"share": 0.1}
+        sign = {"sign_stable": True}
+        result = stats.evaluate_rejection(dsr, bootstrap, {}, twins, concentration, sign, pead_delta_sharpe=0.5)
+        assert result["reject"] is True
+        assert result["reasons"]["shuffle_null_shows_no_excess_order_information"] is True
 
 
 def _synthetic_panel(n_days=250, n_names=10, seed=0) -> Panel:

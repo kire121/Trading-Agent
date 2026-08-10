@@ -27,6 +27,7 @@ import pandas as pd
 from vridmomentet.backtest import BacktestResult, run_backtest
 from vridmomentet.config import (
     BUCKET_GRID,
+    PRIMARY_EXECUTION,
     TRANSFORM_GRID,
     WINDOW_GRID,
     CostModel,
@@ -77,7 +78,7 @@ def run_grid(
     winsor_lo: float = 0.01,
     winsor_hi: float = 0.99,
     tanh_scale_days: int = 20,
-    execution: str = "monday_close",
+    execution: str = PRIMARY_EXECUTION,
 ) -> GridResult:
     u = signed_dollar_volume(panel)
     rows = []

@@ -30,6 +30,24 @@ class TestAssignBucket:
         assert np.isnan(buckets["c"])
         assert buckets.drop("c").notna().all()
 
+    def test_top_name_reaches_top_bucket_even_when_fewer_names_than_buckets(self):
+        """N=3 < n_buckets=5: the naive floor((rank-1)/N*n_buckets) formula
+        gives the highest-ranked name bucket 3, not 4 -- select_legs()'s
+        top bucket would silently come up empty. The single best-ranked
+        name must always land in bucket n_buckets-1.
+        """
+        s = pd.Series([10.0, 20.0, 30.0], index=["low", "mid", "high"])
+        buckets = assign_bucket(s, n_buckets=5)
+        assert buckets["high"] == 4
+        assert buckets["low"] == 0
+
+    def test_large_n_top_bucket_assignment_unaffected_by_the_small_n_fix(self):
+        s = pd.Series(np.arange(25), index=[f"T{i}" for i in range(25)])
+        buckets = assign_bucket(s, n_buckets=5)
+        assert buckets["T24"] == 4  # single highest-ranked name, still bucket 4
+        counts = buckets.value_counts().sort_index()
+        assert list(counts.values) == [5, 5, 5, 5, 5]  # bucket sizes still balanced
+
 
 class TestSelectLegs:
     def test_long_short_are_disjoint_and_from_extremes(self):

@@ -28,7 +28,6 @@ Oglegrinden precedent:
 from __future__ import annotations
 
 import warnings
-from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
@@ -423,9 +422,18 @@ def evaluate_rejection(
     dsr_oos: dict, bootstrap: dict, shuffle: dict, twins: dict, concentration: dict, sign: dict,
     pead_delta_sharpe: float, thresholds: RejectionThresholds = RejectionThresholds(),
 ) -> dict:
+    # The brief's own primary pre-registered null (block_size=1: a full,
+    # unrestricted within-window day-order permutation). Under the null, a
+    # 95th-percentile threshold test should flag a real window ~5% of the
+    # time by construction; the observed fraction needs to sit meaningfully
+    # above that (i.e. above shuffle_p_max) to count as evidence of genuine
+    # order information, not just the test's own nominal false-positive rate.
+    shuffle_fraction = shuffle.get("by_block_size", {}).get(1, {}).get("fraction_exceeding_95th_pct_null", float("nan"))
+
     reasons = {
         "dsr_oos_z_leq_threshold": bool(np.isnan(dsr_oos.get("z", np.nan)) or dsr_oos["z"] <= thresholds.dsr_z_min),
         "bootstrap_p_geq_threshold": bool(np.isnan(bootstrap.get("p_value", np.nan)) or bootstrap["p_value"] >= thresholds.bootstrap_p_max),
+        "shuffle_null_shows_no_excess_order_information": bool(np.isnan(shuffle_fraction) or shuffle_fraction <= thresholds.shuffle_p_max),
         "twin_beats_primary": bool(twins.get("beats_all_twins") is not True),
         "pnl_concentration_gt_threshold": bool((concentration.get("share") or 0) > thresholds.pnl_concentration_max),
         "subperiod_sign_unstable": bool(not sign.get("sign_stable", False)),

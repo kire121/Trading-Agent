@@ -45,6 +45,8 @@ from typing import Sequence
 
 import pandas as pd
 
+from vridmomentet import config
+
 _FAR_FUTURE = _dt.date(9999, 1, 1)
 
 _HEADERS = {
@@ -167,8 +169,8 @@ class EODHDProvider(UniverseProvider):
     def __init__(
         self,
         api_token: str | None = None,
-        sp500_index: str = "GSPC.INDX",
-        sp400_index: str = "MID.INDX",
+        sp500_index: str = config.SP500_INDEX_TICKER,
+        sp400_index: str = config.SP400_INDEX_TICKER,
         cache_dir: str | None = None,
         max_workers: int = 8,
         request_timeout: float = 30.0,

@@ -31,6 +31,12 @@ def assign_bucket(s: pd.Series, n_buckets: int) -> pd.Series:
         return pd.Series(np.nan, index=s.index)
     ranks = valid.rank(method="first")
     buckets = np.floor((ranks - 1) / len(valid) * n_buckets).clip(upper=n_buckets - 1)
+    # When there are fewer names than buckets (N < n_buckets), the formula
+    # above can leave the single highest-ranked name short of bucket
+    # n_buckets-1 (e.g. N=3, n_buckets=5 gives it bucket 3, not 4) --
+    # force it explicitly so select_legs()'s top bucket is never silently
+    # empty. A no-op whenever N >= n_buckets (already correct there).
+    buckets.loc[ranks.idxmax()] = n_buckets - 1
     out = pd.Series(np.nan, index=s.index)
     out.loc[valid.index] = buckets
     return out

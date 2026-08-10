@@ -27,10 +27,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import numpy as np
 import pandas as pd
 
-from vridmomentet.config import CostModel, PortfolioParams
+from vridmomentet.config import EXECUTION_VARIANTS, PRIMARY_EXECUTION, CostModel, PortfolioParams
 from vridmomentet.data import Panel
 from vridmomentet.portfolio import WeeklyPortfolio, build_target_weights, turnover
 from vridmomentet.signal import SignalResult
@@ -79,7 +78,7 @@ class BacktestResult:
     weights_by_date: dict = field(default_factory=dict, repr=False)
     longs_by_date: dict = field(default_factory=dict, repr=False)
     shorts_by_date: dict = field(default_factory=dict, repr=False)
-    execution: str = "monday_close"
+    execution: str = PRIMARY_EXECUTION
     params: PortfolioParams = field(default_factory=PortfolioParams)
 
 
@@ -88,7 +87,7 @@ def _entry_exit_price_frame(panel: Panel, execution: str) -> pd.DataFrame:
         return panel.adj_close
     if execution == "monday_open":
         return panel.adj_open
-    raise ValueError(f"unknown execution convention {execution!r}")
+    raise ValueError(f"unknown execution convention {execution!r}, must be one of {EXECUTION_VARIANTS}")
 
 
 def run_backtest(
@@ -97,7 +96,7 @@ def run_backtest(
     decision_dates: pd.DatetimeIndex,
     portfolio_params: PortfolioParams = PortfolioParams(),
     cost_model: CostModel = CostModel(),
-    execution: str = "monday_close",
+    execution: str = PRIMARY_EXECUTION,
     price_min: float = 5.0,
     adv_min: float = 20_000_000.0,
 ) -> BacktestResult:
@@ -155,7 +154,10 @@ def run_backtest(
         prev_weights = port.weights
 
     table = pd.DataFrame(rows).set_index("decision")
-    cost_rate = cost_model.round_trip_bps() / 10_000.0
+    # portfolio.turnover() already sums both legs of trading (each exiting
+    # name's |prev_w| and each entering name's |new_w|), so the ONE-WAY
+    # rate is what prices it -- see CostModel.one_way_bps()'s docstring.
+    cost_rate = cost_model.one_way_bps() / 10_000.0
     weekly_costs = table["turnover"] * cost_rate
     weekly_net = table["gross_return"] - weekly_costs
 
@@ -178,11 +180,11 @@ def run_backtest(
 
 
 def benchmark_weekly_returns(price_series: pd.Series, calendar: pd.DatetimeIndex,
-                              decision_dates: pd.DatetimeIndex, execution: str = "monday_close") -> pd.Series:
+                              decision_dates: pd.DatetimeIndex, execution: str = PRIMARY_EXECUTION) -> pd.Series:
     """Same entry/exit timing convention as the strategy, applied to a single
     benchmark price series (e.g. SPY), for apples-to-apples beta/correlation.
     """
-    valid_decisions = [d for d in decision_dates if d in price_series.index or True]
+    valid_decisions = list(decision_dates)  # per-week entry/exit availability is checked in the loop below
     out = {}
     for i, f_i in enumerate(valid_decisions):
         entry_date = next_trading_day(calendar, f_i)
