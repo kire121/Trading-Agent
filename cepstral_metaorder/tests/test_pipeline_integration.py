@@ -47,7 +47,14 @@ def test_full_pipeline_runs_end_to_end_on_synthetic_multi_symbol_data_and_detect
         raw_intraday[sym] = _raw_intraday_from_dense(dense)
         eod_raw[sym] = eod_from_dense(dense)
 
-    result = pipeline.run_pipeline(raw_intraday, eod_raw, run_step2=True, seed=1)
+    # force_step2_diagnostics=True so this test ALWAYS exercises the step2 code
+    # path, regardless of whether step0/1 happen to pass on this synthetic
+    # setup -- an earlier version of this test used `if "step2" in result`,
+    # which silently skipped step2's assertions whenever step0/1 failed on
+    # the synthetic data, and that gap let a real merge-collision bug in
+    # pipeline.py's sign-consistency wiring reach the real pilot run
+    # undetected. Don't reintroduce that gap.
+    result = pipeline.run_pipeline(raw_intraday, eod_raw, run_step2=True, force_step2_diagnostics=True, seed=1)
 
     assert "TARGET" in result["signal_layer"]["signal_by_symbol"]
     assert not result["fm_panel"].empty
@@ -67,7 +74,11 @@ def test_full_pipeline_runs_end_to_end_on_synthetic_multi_symbol_data_and_detect
     for twin_name, bt in result["twin_backtests"].items():
         assert len(bt["daily"]) > 0
 
-    if "step2" in result:
-        assert "dsr" in result["step2"]
-        assert "sign_consistency" in result["step2"]
-        assert "twin_race" in result["step2"]
+    assert "step2" in result  # forced above; must always be present now
+    assert "dsr" in result["step2"]
+    assert "sign_consistency" in result["step2"]
+    assert "twin_race" in result["step2"]
+    # the 5-leg race: 3 named twins + the 2 null-hypothesis baselines
+    assert set(result["step2"]["twin_race"]["twins"].keys()) == {
+        "turnover_z", "unmasked_flow", "reversal_5d", "null_a_block_shuffle", "null_b_random_matched",
+    }

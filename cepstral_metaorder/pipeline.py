@@ -187,11 +187,9 @@ def run_pipeline(
         return result
     result["step2_diagnostic_only"] = not battery_passed_through_step1
 
-    d_by_symbol = {s: f["D"] for s, f in signal_layer["signal_by_symbol"].items()}
-    d_long = pd.concat([pd.DataFrame({"date": pd.to_datetime(v.index), "symbol": s, "D": v.values})
-                         for s, v in d_by_symbol.items()], ignore_index=True)
-    sign_panel = fm_panel.merge(d_long, on=["date", "symbol"], how="left")
-    sign_consistency = val.sign_consistency_by_subperiod(sign_panel, direction_col="D", y_col="fwd_ret")
+    # fm_panel already carries 'D' (build_fm_panel joins the full signal frame,
+    # which includes it) -- no need to re-derive and merge it back in.
+    sign_consistency = val.sign_consistency_by_subperiod(fm_panel, direction_col="D", y_col="fwd_ret")
 
     # Null-hypothesis baselines (a) and (b) from the spec's battery, run
     # through the identical portfolio engine and folded into the same
