@@ -5,3 +5,8 @@ statsmodels>=0.14
 arch>=6.3
 certifi
 pytest>=7.0
+
+# Only needed for build_pdf.py -- not used by the research pipeline itself.
+weasyprint
+markdown
+pygments
