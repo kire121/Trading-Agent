@@ -1,0 +1,96 @@
+{
+  "n_candidates": 2370,
+  "n_identified": 1929,
+  "kappa": 20.0,
+  "p_star": 0.6630387337670872,
+  "redundancy_screen": {
+    "r2_phat_vs_battery": 0.022286021133173906,
+    "n_phat": 1928,
+    "r2_halflife_baseline": 0.015485688154489696,
+    "r2_halflife_augmented": 0.040896767145869095,
+    "delta_r2_halflife": 0.0254110789913794,
+    "n_halflife": 840,
+    "kill_phat_redundant": false,
+    "kill_zero_incremental": false,
+    "killed": false
+  },
+  "estimator_null": {
+    "real_dispersion": 0.4892015380125201,
+    "null_p95_dispersion": 0.5465194699764645,
+    "n_events_used": 300,
+    "n_draws": 100,
+    "passed": false
+  },
+  "rank_ic": {
+    "ic": -0.17626640043127725,
+    "p_value": 0.001,
+    "n": 840,
+    "n_draws": 1000
+  },
+  "signed_ic": {
+    "ic": 0.1745715054169792,
+    "p_value": 0.0,
+    "n": 777,
+    "n_draws": 1000
+  },
+  "primary_summary": {
+    "sharpe": -0.24013346397610755,
+    "annualized_return": -0.023381088179390396,
+    "annualized_vol": 0.09736705493790211,
+    "max_drawdown": -0.5900824311380706,
+    "n_days": 5937,
+    "skew": 2.8774825500613193,
+    "kurtosis": 98.45653224262553,
+    "n_events": 777,
+    "hit_rate": 0.3912483912483912,
+    "avg_holding_days": 11.522522522522523,
+    "exit_reason_counts": {
+      "tau_exit": 470,
+      "hard_stop": 307
+    }
+  },
+  "twins": {
+    "T1": {
+      "sharpe": -0.1873093382742638,
+      "total_return": -0.4396994742773299,
+      "mean_net_return": -0.0008153149033942005,
+      "n_events": 777
+    },
+    "T2": {
+      "sharpe": -0.21173609607509017,
+      "total_return": -0.3961841588615266,
+      "mean_net_return": -0.0007593106364497945,
+      "n_events": 777
+    },
+    "T3": {
+      "sharpe": -0.4323296824781345,
+      "total_return": -0.6228292781300813,
+      "mean_net_return": -0.0010311492186097706,
+      "n_events": 777
+    },
+    "primary": {
+      "sharpe": -0.24013346397610755,
+      "total_return": -0.5508473036549237
+    }
+  },
+  "sign_stability": {
+    "primary_sign": -1.0,
+    "frac_matching": 1.0,
+    "stable": true
+  },
+  "dsr": {
+    "dsr_prob": 4.45740318768831e-65,
+    "dsr_excess": -0.3864000827265819,
+    "expected_max_sr": 0.14626661875047436
+  },
+  "gates": {
+    "redundancy_killed": false,
+    "estnull_passed": false,
+    "rank_ic_significant": true,
+    "signed_ic_significant": true,
+    "sign_stable_over_grid": true,
+    "min_events_is": true,
+    "beats_t1_net": false
+  },
+  "all_gates_passed": false
+}
