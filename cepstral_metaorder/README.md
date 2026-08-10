@@ -1,5 +1,44 @@
 # Cepstral metaorder-slicing signal
 
+## Bottom line
+
+**Rejected**, on real EODHD data (78 liquid US names, Nov 2024-Jun 2025;
+scope reduction from the full spec explained below), by the pre-registered
+criteria themselves -- at the cheapest, earliest gate:
+
+- Step 0 existence test **passes** (real cepstral peaks exceed a within-day
+  permutation null 26% of the time vs. a required >=15%) -- there IS more
+  periodic structure in intraday volume than chance predicts.
+- Step 0 breadth test **fails**: cross-sectional dispersion of the
+  standardized score is not distinguishable from a block-shuffled null
+  (median 0.466 vs. block-null p95 of 0.554). The periodicity that exists
+  isn't spread across names in a way that looks like independent,
+  tradeable signal -- more consistent with noise/estimation variance than
+  with widespread genuine metaorder slicing.
+- Step 1 Fama-MacBeth screen **independently fails** (NW t=-1.52 on the
+  incremental S_bar coefficient, need |t|>=2 -- and the point estimate's
+  sign is *backwards* from the hypothesis).
+- Run anyway as a diagnostic (Step 0/1 failing already kills it -- this
+  doesn't change the verdict): net Sharpe -0.50 annualized, deflated Sharpe
+  0.25 (need >0.5), sign consistency present in only 1 of 4 subperiods
+  (need >=3). Gross Sharpe is actually +1.04 -- costs alone erase the
+  entire apparent edge at this pilot's turnover (~10%/day on a 6.5-name
+  book; see caveat below). The signal does beat all 5 baseline-race legs
+  (3 named twins + 2 null-hypothesis baselines) net of costs, but that is
+  not a meaningful pass when every leg, including the main signal, lost
+  money -- it means nothing in this family worked in this window, not that
+  the cepstral construction specifically adds value.
+
+None of this rules out the idea at full spec scope (1000 names, 2012-2025,
+measured spreads) -- see Limitations for exactly how much smaller this
+pilot is and why. What it does establish: the mechanism is implemented
+correctly (proven on synthetic ground truth first), and the one real,
+if narrow, read available inside a single session says "not distinguishable
+from noise, and even ignoring that, unprofitable net of costs." Full
+numbers: `pilot_results/REPORT.md`.
+
+## What this is
+
 Implementation of the hypothesis: institutional metaorders sliced into
 scheduled child orders (TWAP-style) leave a weak, stock-specific periodicity
 in intraday volume, detectable via the real cepstrum (Bogert, Healy & Tukey,
@@ -26,8 +65,11 @@ builds a small documented TSMOM proxy stand-in since none existed to reuse.
 - `signal.py` -- `u_t = log(1+v_t) - profile_21d`, real cepstrum via FFT,
   cross-sectional median/MAD standardization per quefrency/day, slicing score
   `S_bar`, `tau*`, comb-filter burst mask (see "Comb filter" below), direction `D`.
-- `baselines.py` -- three twin signals + a liveness assertion so a dead twin
-  can't trivially "lose" and falsely validate the main signal.
+- `baselines.py` -- three named twin signals + a liveness assertion so a dead
+  twin can't trivially "lose" and falsely validate the main signal.
+  `validation.py` adds the other two legs of the spec's null-hypothesis
+  battery (day-block-shuffled signal, turnover/gross-matched random
+  portfolio) as two more entrants in the same race.
 - `portfolio.py` -- entry/exit/hysteresis/time-stop, rank-tilted sizing with
   a 2%/name cap, 63d vol targeting, and a 30%-of-target no-trade band.
 - `validation.py` -- Step 0 (within-day permutation existence test + PC1/
@@ -43,7 +85,7 @@ builds a small documented TSMOM proxy stand-in since none existed to reuse.
 - `synthetic.py` + `tests/` -- a synthetic minute-bar generator with an
   injectable, KNOWN periodicity and direction, used to prove the detector
   recovers ground truth *before* trusting it on real data or real capital.
-  37+ unit/integration tests, all passing.
+  45 unit/integration tests, all passing (`pytest cepstral_metaorder/tests/`).
 
 ## Interpretive decisions (the spec is terse; here's what was assumed)
 
@@ -66,13 +108,23 @@ builds a small documented TSMOM proxy stand-in since none existed to reuse.
   to be an integer multiple of the true period). Practical implication:
   tau* should be read as "a multiple of the child-order interval," not
   literally as that interval, without further post-processing.
-- **Three twins**: "abnormal turnover-z without periodicity" = cross-
+- **Three named twins**: "abnormal turnover-z without periodicity" = cross-
   sectional z of 5d relative turnover, directed by plain trailing-5d-return
   sign (trend-following). "Signed volume imbalance without comb mask" =
   the SAME S_bar gate as the main signal, but direction computed over ALL
   minutes instead of just comb-mask burst minutes (isolates whether the
   mask's minute-selection specifically adds value). "5-day reversal" =
   gate on |5d return|, direction = fade it.
+- **Null baselines (a)/(b)**: (a) is a per-symbol day-block shuffle of the
+  main signal's own (S_bar, D) pairs -- same values, randomized calendar
+  alignment, run through the identical portfolio engine. (b) is i.i.d.
+  random score ranks and random direction signs, with |D| magnitudes
+  resampled from the real signal's own distribution, also run through the
+  identical engine so gross exposure matches by construction; turnover is
+  NOT independently matched (random per-day scores have no persistence, so
+  (b)'s turnover likely runs higher than the real signal's) -- a known
+  imperfection that, if anything, makes (b) a harsher comparator via extra
+  cost drag, not an easier one to beat.
 - **Execution timing**: S_bar/D computed from data through day d's close;
   the resulting weight is executed at d+1's open and marked at d+2's open
   (open-to-open), matching "computed after close, order placed at next open."
