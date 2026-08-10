@@ -238,11 +238,18 @@ testa från noll — inte en efterhandsjustering av Vindkastet.
 ```
 cd research/vindkastet
 SSL_CERT_FILE=/root/.ccr/ca-bundle.crt python3 fetch_data.py   # kräver EODHD_API_KEY i miljön
-python3 -c "import core, pandas as pd; ..."                    # se core.py / backtest.py för API
+python3 run_grid.py               # Steg A: bygger signalpanelen, 24-variant-gridets händelseantal
+python3 run_gate_checks.py        # Steg B: v*-stabilitet vs brusgolv, PC1-check, redundans, betingad IC
+python3 run_backtest_summary.py   # Steg C: deskriptiv backtest + diversifieringskontroll
+python3 run_secondary_universe.py # Steg D: teckenreplikation på orörd sekundäryta
 ```
+
+Varje skript skriver sina siffror rakt till terminalen och sparar tabeller/arrayer i `output/`
+(CSV/NPY); alla tal i denna rapport är reproducerade ordagrant därifrån.
 
 Filer:
 - `fetch_data.py` — datahämtning (EODHD → `data/prices_{primary,bench,secondary}.csv`)
 - `core.py` — EWMA-vol, ridge-VAR(1), SVD-propagator, veckovis signalpanel, trigger
 - `backtest.py` — händelsebacktest (entry/exit/sizing/kostnader per Regel 3–4)
+- `run_grid.py` / `run_gate_checks.py` / `run_backtest_summary.py` / `run_secondary_universe.py` — Steg A–D ovan
 - `output/` — grid-resultat, v\*-stabilitet, IC-diagnostik, backtest-loggar (CSV/NPY)
