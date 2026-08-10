@@ -1,0 +1,3 @@
+data/raw/
+output/panels_cache.pkl
+__pycache__/
