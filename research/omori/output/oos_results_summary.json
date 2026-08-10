@@ -1,0 +1,27 @@
+{
+  "n_events": 924,
+  "summary": {
+    "sharpe": -0.3469534785657391,
+    "annualized_return": -0.044332945163290095,
+    "annualized_vol": 0.12777777973737797,
+    "max_drawdown": -0.7354154308113208,
+    "n_days": 5937,
+    "skew": 3.1850743510399853,
+    "kurtosis": 87.90831228907871,
+    "n_events": 924,
+    "hit_rate": 0.3658008658008658,
+    "avg_holding_days": 11.793290043290042,
+    "exit_reason_counts": {
+      "tau_exit": 464,
+      "hard_stop": 460
+    }
+  },
+  "kappa": 20.0,
+  "p_star": 0.6630387337670872,
+  "events_lands": 457,
+  "events_commodities": 467,
+  "events_contaminated_commodities": 151,
+  "clean_subset_n_events": 773,
+  "clean_subset_event_level_sharpe_proxy": -0.10089706617776938,
+  "min_events_oos_met": true
+}

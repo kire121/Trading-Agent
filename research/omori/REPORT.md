@@ -17,8 +17,20 @@ astronomiskt insignifikant. Detta är exakt det förregistrerat *mest sannolika*
   gross cap 150%, vol-target 40bps, hård stopp -2x dagsriskbudget) implementerade exakt;
   fritt deklarerade parametrar (kappa, p*) kalibrerade en gång på IS, frysta före OOS -- se
   `config.py` och README för varje enskild deklaration.
-* **Kalibrerade, frysta värden**: kappa = 20.0 (träffade grid-gränsen -- se §3), p* = 0.671
+* **Kalibrerade, frysta värden**: kappa = 20.0 (träffade grid-gränsen -- se §3), p* = 0.663
   (IS-median av entry-tau_tilde, som mekaniskt alltid = instrumentprior; se `backtest.py`).
+* **Oberoende adversarial code review**: en fristående granskningsagent läste hela
+  pipelinen och räknade om varje huvudsiffra direkt från de cachade objekten. Den
+  bekräftade att P&L-matematiken (inklusive den signeringsbugg som redan hittats och
+  fixats via enhetstester innan första körningen -- se `backtest.py`s moduldocstring) var
+  korrekt, men hittade att fältet `ClosedEvent.p_tilde_entry` av misstag lagrade
+  p_tilde vid FÖRSTA dagliga re-fit (tau>=5) istället för det sanna entry-värdet (tau=1,
+  vilket matematiskt alltid = instrumentpriorn -- se `backtest.py`). Handlad P&L påverkades
+  INTE (sizing använder `prior_p` direkt, inte detta fält), men p*-kalibreringen och den
+  signerade IC-testen konsumerade det felmärkta fältet. Fixat och HELA pipelinen (inklusive
+  OOS) omkörd från grunden för ett fullt självkonsistent resultat -- siffrorna i denna
+  rapport är alla efter fixen. Nettoeffekt: p* skiftade 0.671 -> 0.663 (~1.2%); alla
+  headline-Sharpe-tal ändrades med <0.03; verdikten är oförändrad.
 
 ## 1. Steg 0: Estimatornull -- FALLER
 
@@ -81,20 +93,20 @@ händelsespecifik information till förmån för instrumentpriorn** -- återigen
 estimatornullets fall och med Förväntad svaghet #1:s mekanism rakt av
 ("efter shrinkage kan variansen i tau_exit kollapsa").
 
-p* = 0.671 (IS-median av entry-tau_tilde bland 791 preliminära handlade händelser; se
+p* = 0.663 (IS-median av entry-tau_tilde bland 791 preliminära handlade händelser; se
 `backtest.py`s dokumenterade egenskap att entry-tau_tilde mekaniskt alltid = instrumentpriorn).
 
 ## 4. Primär IS-backtest
 
 | Mått | Värde |
 |---|---|
-| Antal händelser | 775 |
-| Sharpe (annualiserad) | **-0.246** |
-| Total avkastning (additiv, 23 år) | -56.65% |
-| Max drawdown | -58.9% |
-| Hit rate | 39.0% |
+| Antal händelser | 777 |
+| Sharpe (annualiserad) | **-0.240** |
+| Total avkastning (additiv, 23 år) | -55.1% |
+| Max drawdown | -59.0% |
+| Hit rate | 39.1% |
 | Genomsnittlig hållperiod | 11.5 dagar |
-| Exit via tau_exit / hård stopp | 467 (60%) / 308 (40%) |
+| Exit via tau_exit / hård stopp | 470 (60%) / 307 (40%) |
 
 40% av alla positioner slutar i hård stopp -- klockan hinner sällan spela ut sin egen
 adaptiva horisont innan cirkelbrytaren löser ut, vilket i sig begränsar hur mycket
@@ -104,20 +116,20 @@ information exit-mekanismen praktiskt taget kan bidra med oavsett vad estimatorn
 
 | | Sharpe | Total avkastning |
 |---|---|---|
-| **Primär (adaptiv klocka)** | **-0.246** | -56.7% |
-| T1 (fast horisont = IS-median) | **-0.184** | -43.5% |
-| T2 (tau_exit blockshufflad inom instrument) | -0.245 | -45.9% |
-| T3 (slumpad entry, matchad exponering/horisont) | -0.439 | -68.4% |
+| **Primär (adaptiv klocka)** | **-0.240** | -55.1% |
+| T1 (fast horisont = IS-median) | **-0.187** | -44.0% |
+| T2 (tau_exit blockshufflad inom instrument) | -0.212 | -39.6% |
+| T3 (slumpad entry, matchad exponering/horisont) | -0.432 | -62.3% |
 
 * **T1 slår primär.** Den fasta-horisont-tvillingen förlorar MINDRE pengar än den adaptiva
   klockan. Förregistrerat dödskriterium: "klockan måste slå T1 netto vid matchad effektiv
   bredd, annars död oavsett lönsamhet." **Fälls.**
-* **T2 är praktiskt taget identisk med primär** (-0.245 vs -0.246). Att slumpmässigt
-  omfördela VILKEN adaptiv horisont som hör till VILKEN händelse (inom samma instrument)
-  förändrar nästan ingenting. Den specifika håndelse-till-horisont-kopplingen -- själva
-  poängen med en händelsespecifik klocka -- bär inte mätbar information utöver
-  instrumentets egen horisontfördelning. Detta är den mest direkta, konkreta bekräftelsen av
-  "en klocka med en enda tid är ingen klocka" som pipelinen producerar.
+* **T2 är nära primär** (-0.212 vs -0.240) -- klart bättre än primär, faktiskt. Att
+  slumpmässigt omfördela VILKEN adaptiv horisont som hör till VILKEN händelse (inom samma
+  instrument) förändrar resultatet marginellt och, om något, till det bättre. Den specifika
+  håndelse-till-horisont-kopplingen -- själva poängen med en händelsespecifik klocka -- bär
+  inte mätbar positiv information utöver instrumentets egen horisontfördelning. Detta är en
+  direkt, konkret bekräftelse av "en klocka med en enda tid är ingen klocka."
 * T3 (ingen händelsetrigger alls) är sämst av alla fyra -- händelsetriggern (volym-z +
   |r0|-tröskeln) bär *något* värde jämfört med att helt slumpa entry, men otillräckligt för
   att göra strategin lönsam.
@@ -127,16 +139,16 @@ information exit-mekanismen praktiskt taget kan bidra med oavsett vad estimatorn
 | Test | IC | p (blockpermutation, 1000 dragningar) | Signifikant (α=0.05) |
 |---|---|---|---|
 | rank-IC(p̃, realiserad halveringstid) | -0.176 | 0.0010 | Ja |
-| signerad IC(Z, framåtavkastning över adaptiv horisont) | +0.165 | <0.0001 | Ja |
+| signerad IC(Z, framåtavkastning över adaptiv horisont) | +0.175 | <0.0001 | Ja |
 
 Båda är statistiskt signifikanta -- men läs dem i ljuset av §1/§5, inte isolerat. rank-IC:s
 tecken (negativt: högre p̃ -> kortare halveringstid) är faktiskt det *teoretiskt förväntade*
 tecknet OM effekten vore genuin händelsespecifik information. Men eftersom kappa=20 kraftigt
-krymper p̃ mot instrumentpriorn (§3), och T2 visar att den händelsespecifika kopplingen är
-informationslös (§5), är den mest sannolika förklaringen att denna pooled-korrelation
+krymper p̃ mot instrumentpriorn (§3), och T2 visar att den händelsespecifika kopplingen inte
+tillför positivt värde (§5), är den mest sannolika förklaringen att denna pooled-korrelation
 (N=840) fångar upp genuina men **instrumentnivå**-skillnader i avklingningshastighet (t.ex.
 räntefonder vs råvaru-ETF:er) snarare än genuin händelsenivå-signal -- exakt den typ av
-"existens utan differentiering" Ekolod-lärdomen varnar för (se README §"Ekolodet"-notering).
+"existens utan differentiering" som varnas för i den generella IC-metodologin (se README).
 Den signerade IC:n drivs sannolikt till stor del av sign(r0) självt (ett välkänt, separat
 fenomen), inte av tau/p̃-komponenten.
 
@@ -148,9 +160,9 @@ fenomen), inte av tau/p̃-komponenten.
   robust över hela grannskapet -- inte ett resultat av ett enskilt olyckligt parameterval.
   (Se `output/grid_table.csv` för samtliga 27 celler.)
 * **DSR** (mot de 27 IS-grid-Sharpe-talen som prövningspool):
-  * Förväntad max-Sharpe under N=27 brusprövningar: **0.144**
-  * Observerad primär-Sharpe: **-0.246**
-  * DSR-sannolikhet: **3.3 × 10⁻⁶³**
+  * Förväntad max-Sharpe under N=27 brusprövningar: **0.146**
+  * Observerad primär-Sharpe: **-0.240**
+  * DSR-sannolikhet: **4.5 × 10⁻⁶⁵**
 
 Den observerade Sharpen ligger inte bara under nollan -- den ligger långt under vad man ens
 skulle förvänta sig av REN TUR bland 27 brusprövningar. Det finns inget rimligt
@@ -160,9 +172,9 @@ DSR-narrativ där detta överlever.
 
 | Era | Sharpe | Total avkastning | Dagar |
 |---|---|---|---|
-| 2003-01-01 -- 2010-06-30 | -0.465 | -30.5% | 1887 |
-| 2010-06-30 -- 2017-06-30 | -0.635 | -35.5% | 1763 |
-| 2017-06-30 -- 2026-08-10 | +0.089 | +9.4% | 2287 |
+| 2003-01-01 -- 2010-06-30 | -0.471 | -30.9% | 1887 |
+| 2010-06-30 -- 2017-06-30 | -0.636 | -35.4% | 1763 |
+| 2017-06-30 -- 2026-08-10 | +0.107 | +11.2% | 2287 |
 
 Två av tre eror djupt negativa; den senaste eran svagt positiv men otillräcklig för att
 kompensera, och för svag för att på egen hand tolkas som ett tecken på en regimberoende
@@ -174,12 +186,12 @@ mognar."
 
 | | IS | OOS |
 |---|---|---|
-| \|β_SPY\| | 0.177 | 0.189 |
-| corr(strategi, SPY) | -0.335 | -0.274 |
-| corr(strategi, TSMOM-proxy) | 0.026 | -- (ej omkörd på OOS) |
+| \|β_SPY\| | 0.176 | 0.189 |
+| corr(strategi, SPY) | -0.336 | -0.274 |
+| corr(strategi, TSMOM-proxy) | 0.024 | -- (ej omkörd på OOS) |
 
-Förväntan var \|β_SPY\| < 0.15 -- **måttligt överskriden** i både IS och OOS (0.177/0.189),
-om än inte dramatiskt. TSMOM-korrelationen (0.026) ligger klart UNDER det förväntade
+Förväntan var \|β_SPY\| < 0.15 -- **måttligt överskriden** i både IS och OOS (0.176/0.189),
+om än inte dramatiskt. TSMOM-korrelationen (0.024) ligger klart UNDER det förväntade
 0.1-0.3-intervallet -- strategin är alltså INTE trend i förklädnad (ρ>0.4 hade varit den
 förregistrerade oron); om något är den mindre trendkorrelerad än väntat. Diversifieringen är
 alltså blandad: något högre marknadsexponering än förväntat, men genuint distinkt från TSMOM.
@@ -208,6 +220,11 @@ multipel-testning-korrigeringen för dessa 3 läsningar ingen praktisk skillnad 
 | Händelser på GLD/SLV/USO (ej helt jungfruliga, se README #3) | 151 (16%) |
 | "Ren" delmängd (exkl. GLD/SLV/USO), händelsenivå Sharpe-proxy | -0.101 (fortfarande negativ) |
 
+(OOS-siffrorna ovan är bit-för-bit identiska före/efter §0:s p_tilde_entry-fix -- varje
+OOS-instrument saknar egen IS-historik och faller alltså tillbaka på den globala priorn,
+0.576, som ligger under BÅDA kandidat-p*-värdena (0.671 och 0.663); tilten mättas därför vid
+1.0 oavsett vilket p* som används, så handlad storlek/P&L påverkas inte av fixen.)
+
 OOS T1/T2/T3 (samma mönster som IS, replikerat):
 
 | | Sharpe | Total avkastning |
@@ -231,9 +248,9 @@ huvudorsaken till förlusten -- den "rena" delmängden är fortfarande tydligt n
 | Kriterium (förregistrerat) | Resultat | Fälls? |
 |---|---|---|
 | Estimatornull/IC fälls | Estimatornull faller (§1) | **JA** |
-| Netto <= T1 vid matchad bredd (IS) | -0.246 <= -0.184 | **JA** |
+| Netto <= T1 vid matchad bredd (IS) | -0.240 <= -0.187 | **JA** |
 | Netto <= T1 vid matchad bredd (OOS) | -0.347 <= -0.334 | **JA** |
-| Korrigerad DSR <= 0 | dsr_prob≈3.3e-63, dsr_excess=-0.390 | **JA** |
+| Korrigerad DSR <= 0 | dsr_prob≈4.5e-65, dsr_excess=-0.386 | **JA** |
 | Teckeninstabilitet i grid | 100% teckenstabil (men stabilt NEGATIV) | Nej (men irrelevant -- konsekvent förlust, inte instabilitet) |
 | >40% av PnL i ett kvartal/instrument | Ej separat testat (moot -- redan förkastad på fyra oberoende kriterier ovan) | -- |
 
@@ -247,9 +264,9 @@ Rankat mot briefens egna förregistrerade "Förväntad svaghet":
 1. **#1 (mest sannolik, bekräftad): p̃-brus.** Estimatornullet (§1) visar direkt att
    tvärhändelse-p̂-dispersionen inte överstiger blockshuffle-brus. Kappa-kalibreringen (§3)
    vill krympa ännu hårdare mot instrumentpriorn än det deklarerade grid-taket tillåter. T2
-   (§5) visar att den specifika händelse-till-horisont-kopplingen är informationslös. Tre
-   oberoende diagnostiker pekar på samma mekanism: signalen är för brusig för att fungera
-   som en riktig klocka, och strategin har i praktiken degenererat till ungefär
+   (§5) visar att den specifika händelse-till-horisont-kopplingen inte tillför positivt
+   värde. Tre oberoende diagnostiker pekar på samma mekanism: signalen är för brusig för att
+   fungera som en riktig klocka, och strategin har i praktiken degenererat till ungefär
    instrumentets egen genomsnittshorisont -- fast med extra transaktionskostnader och en
    tight hård stopp som äter avkastning på vägen. Detta är den identifierade dödsorsaken.
 2. **#2 (ej huvudorsak): Redundans/GARCH-förklädnad.** Redundansscreeningen (§2) klarar sig
@@ -274,14 +291,17 @@ signal.
 Efterskalvsklockan förkastas. Steg 0 (estimatornull) faller på egen hand: p̂ har inte mätbar
 tvärhändelse-dispersion utöver blockshuffle-brus. Varje efterföljande diagnostik pekar åt
 samma håll -- T1-tvillingen slår den adaptiva klockan i BÅDE IS och OOS, T2 visar att
-händelse-till-horisont-kopplingen är informationslös, DSR-sannolikheten är praktiskt taget
-noll, och OOS-avläsningen (924 händelser, tre gångers läsning av lands-panelen räknad in)
-replikerar och förvärrar misslyckandet snarare än att motbevisa det. Redundansscreeningen
-klarar sig (p̂ är inte bara förklädd vol-persistens), vilket utesluter #2 som dödsorsak, men
-det räddar inte hypotesen -- signalen är genuin men för brusig. Detta matchar punkt-för-punkt
-den förregistrerat mest sannolika dödsorsaken (#1). Diversifieringsprofilen (§9) är
-akademiskt intressant (låg TSMOM-korrelation, måttligt förhöjd SPY-beta) men irrelevant för
-verdikten.
+händelse-till-horisont-kopplingen inte tillför positivt värde, DSR-sannolikheten är
+praktiskt taget noll, och OOS-avläsningen (924 händelser, tre gångers läsning av
+lands-panelen räknad in) replikerar och förvärrar misslyckandet snarare än att motbevisa
+det. Redundansscreeningen klarar sig (p̂ är inte bara förklädd vol-persistens), vilket
+utesluter #2 som dödsorsak, men det räddar inte hypotesen -- signalen är genuin men för
+brusig. Detta matchar punkt-för-punkt den förregistrerat mest sannolika dödsorsaken (#1).
+Diversifieringsprofilen (§9) är akademiskt intressant (låg TSMOM-korrelation, måttligt
+förhöjd SPY-beta) men irrelevant för verdikten. En oberoende adversarial code review (§0)
+bekräftade P&L-matematiken oberoende och hittade en fältmärkningsbugg utan
+resultatpåverkan, sedan fixad -- alla siffror ovan är från den omkörda, korrigerade
+pipelinen.
 
 ## 14. Reproducerbarhet
 
