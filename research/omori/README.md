@@ -87,6 +87,13 @@ här snarare än tysta antaganden (husets konvention):
    tak - nuvarande brutto); befintliga positioner tvångsavvecklas aldrig för att göra plats,
    konsekvent med att sizing är fixerad vid entry (ingen daglig ombalansering, vilket hade
    krävt ett odokumenterat kostnadsantagande för ombalansering).
+9. **Entry har en obligatorisk en-dags exekveringsfördröjning (close t0+1, brief-pinnad);
+   exit har det INTE** -- ett exit-beslut (tau_exit/hård stopp/tak) fattas och exekveras
+   samma dag, på samma stängningskurs som dagens re-fit använder. Båda är strikt kausala
+   (ingen använder framtida data), men det är en medveten asymmetri: att också fördröja
+   exit en dag hade krävt ett odokumenterat antagande om exekvering, och skulle om något
+   göra hård-stoppade förluster något värre (en extra dag exponering innan man faktiskt
+   kommer ut), inte bättre.
 
 ## Data
 

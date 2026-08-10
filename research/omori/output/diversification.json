@@ -1,8 +1,0 @@
-{
-  "is_beta_spy": -0.17673583377797736,
-  "is_corr_spy": -0.33491035805364316,
-  "is_corr_tsmom_proxy": 0.026409547016805673,
-  "oos_beta_spy": -0.188716541806768,
-  "oos_corr_spy": -0.2740626460593895,
-  "note": "TSMOM proxy: equal-weighted, monthly-signal (12m sign), vol-scaled, causal, computed on the IS panel only (Moskowitz-Ooi-Pedersen style construction, not re-run on OOS)."
-}

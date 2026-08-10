@@ -47,6 +47,7 @@ class Position:
     weight: float               # already signed by direction; see module docstring
     prior_p: float
     entry_cost: float
+    p_tilde_entry: float        # = prior_p always, by construction (see below)
     cum_return: float = 0.0    # NAV-level cumulative P&L since entry (weight-scaled)
     p_tilde_trace: list = field(default_factory=list)
     tau_exit_trace: list = field(default_factory=list)
@@ -131,7 +132,14 @@ def run_backtest(panel: data.Panel, priors_dict, p_star,
             open_positions[ticker] = Position(
                 ticker=ticker, t0_idx=pe["t0_idx"], entry_idx=t,
                 direction=pe["direction"], weight=raw_w, prior_p=prior_p,
-                entry_cost=entry_cost,
+                entry_cost=entry_cost, p_tilde_entry=prior_p,
+                # p_tilde AT ENTRY (tau=1) is mechanically always prior_p: a
+                # fit needs >=MIN_POSITIVE_EXCESS_DAYS(4) positive-excess
+                # days, and at tau=1 at most 1 day of data exists, so
+                # fit_omori is always unidentified here -- see signal.shrink.
+                # Snapshotting it directly (rather than taking the first
+                # daily-re-fit p_tilde at tau>=FIT_START_TAU, which is a
+                # DIFFERENT, later quantity) keeps this field's name honest.
             )
         pending_entries = []
 
@@ -182,14 +190,13 @@ def run_backtest(panel: data.Panel, priors_dict, p_star,
                 cost_drag = abs(pos.weight) * (pos.entry_cost + exit_cost)
                 daily_port_return[t] -= abs(pos.weight) * exit_cost
 
-                p_tilde_entry = pos.p_tilde_trace[0] if pos.p_tilde_trace else pos.prior_p
                 closed_events.append(ClosedEvent(
                     ticker=ticker, t0_idx=pos.t0_idx, entry_idx=pos.entry_idx, exit_idx=t,
                     direction=pos.direction, weight=pos.weight, exit_reason=exit_reason,
                     holding_days=t - pos.entry_idx + 1,
                     gross_return=pos.cum_return,
                     net_return=pos.cum_return - cost_drag,
-                    p_tilde_entry=p_tilde_entry,
+                    p_tilde_entry=pos.p_tilde_entry,
                     volume_z=ef.volume_z[ticker].iloc[pos.t0_idx],
                     r0=ef.returns[ticker].iloc[pos.t0_idx],
                 ))
