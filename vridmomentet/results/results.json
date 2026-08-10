@@ -1230,11 +1230,11 @@
       "by_block_size": {
         "1": {
           "n_windows_tested": 300,
-          "fraction_exceeding_95th_pct_null": 0.07
+          "fraction_exceeding_95th_pct_null": 0.08
         },
         "4": {
           "n_windows_tested": 300,
-          "fraction_exceeding_95th_pct_null": 0.043333333333333335
+          "fraction_exceeding_95th_pct_null": 0.05
         }
       }
     },
@@ -1243,85 +1243,85 @@
   "stage2": {
     "primary": {
       "n_obs": 1230,
-      "mean_period_return": -0.0018256729002924562,
-      "annualized_return": -0.09084524982445208,
-      "annualized_vol": 0.020859839035907036,
-      "sharpe": -4.551089327764783,
-      "sortino": -3.69660906512297,
-      "max_drawdown": -0.8950404883669707,
-      "skew": 0.0006119296442755966,
-      "kurtosis": 16.76993489819966,
-      "hit_rate": 0.1943089430894309
+      "mean_period_return": -0.0009119347187646526,
+      "annualized_return": -0.04654029770073187,
+      "annualized_vol": 0.02076784250794592,
+      "sharpe": -2.283366958200809,
+      "sortino": -2.0648181182790406,
+      "max_drawdown": -0.6771417337825445,
+      "skew": 0.01951579471345412,
+      "kurtosis": 17.071743727484137,
+      "hit_rate": 0.33658536585365856
     },
     "variant_monday_open": {
       "n_obs": 1230,
-      "mean_period_return": -0.001711864834474834,
-      "annualized_return": -0.0854597853665281,
-      "annualized_vol": 0.021904069732227104,
-      "sharpe": -4.063946676617912,
-      "sortino": -3.4451277620345278,
-      "max_drawdown": -0.8792863612552321,
-      "skew": -0.09139924796351931,
-      "kurtosis": 18.146527732336825,
-      "hit_rate": 0.21300813008130082
+      "mean_period_return": -0.0007981266529470305,
+      "annualized_return": -0.04089793799888841,
+      "annualized_vol": 0.02183494473014645,
+      "sharpe": -1.9007415162331494,
+      "sortino": -1.8073046520151754,
+      "max_drawdown": -0.6287576705653809,
+      "skew": -0.07858852815094598,
+      "kurtosis": 18.456621471942455,
+      "hit_rate": 0.33902439024390246
     },
     "twins": {
       "momentum": {
         "n_obs": 1230,
-        "mean_period_return": -0.0017681758068053745,
-        "annualized_return": -0.0903758965782363,
-        "annualized_vol": 0.07317564923042834,
-        "sharpe": -1.2564991622328687,
-        "sortino": -1.1743667504785773,
-        "max_drawdown": -0.8936035524691598,
-        "skew": -0.6150940269354302,
-        "kurtosis": 10.488745358697702,
-        "hit_rate": 0.3902439024390244
+        "mean_period_return": -0.0011784535917651116,
+        "annualized_return": -0.06200363041012824,
+        "annualized_vol": 0.07316593179416209,
+        "sharpe": -0.8375426276833845,
+        "sortino": -0.7827420939715294,
+        "max_drawdown": -0.779985929458356,
+        "skew": -0.6190039428143226,
+        "kurtosis": 10.516690085335295,
+        "hit_rate": 0.43089430894308944
       },
       "momentum_x_turnover": {
         "n_obs": 1230,
-        "mean_period_return": -0.0011067210833260422,
-        "annualized_return": -0.05664949946276954,
-        "annualized_vol": 0.038320762230061256,
-        "sharpe": -1.5017837063744175,
-        "sortino": -1.4236908764139697,
-        "max_drawdown": -0.7505107893770966,
-        "skew": -0.2410606639518143,
-        "kurtosis": 10.991204988855705,
-        "hit_rate": 0.36910569105691055
+        "mean_period_return": -0.0006027166344783468,
+        "annualized_return": -0.031576081947268464,
+        "annualized_vol": 0.03830457310231698,
+        "sharpe": -0.8182120946539997,
+        "sortino": -0.7939286911235152,
+        "max_drawdown": -0.5371920882215118,
+        "skew": -0.23804808839662142,
+        "kurtosis": 11.049993684284129,
+        "hit_rate": 0.41544715447154473
       },
       "lag1_signed_volume_corr": {
         "n_obs": 1230,
-        "mean_period_return": -0.0011600098895991182,
-        "annualized_return": -0.05910004411495606,
-        "annualized_vol": 0.03352711899311333,
-        "sharpe": -1.7991559093265463,
-        "sortino": -1.7051987698979743,
-        "max_drawdown": -0.7695965853133742,
-        "skew": 0.01655775310523586,
-        "kurtosis": 13.354145782396353,
-        "hit_rate": 0.35040650406504065
+        "mean_period_return": -0.0005809137597932076,
+        "annualized_return": -0.03030757924658345,
+        "annualized_vol": 0.03346128483005889,
+        "sharpe": -0.902760179791746,
+        "sortino": -0.8775622919022243,
+        "max_drawdown": -0.5334317338717618,
+        "skew": 0.02756123842443981,
+        "kurtosis": 13.38631538762073,
+        "hit_rate": 0.4219512195121951
       }
     },
     "diversification": {
-      "beta_to_benchmark": -0.013260865667843189,
-      "corr_to_benchmark": -0.11340869007002058,
-      "corr_to_trend_proxy": 0.05448498053548359,
+      "beta_to_benchmark": -0.013183369655925524,
+      "corr_to_benchmark": -0.11324537111523135,
+      "corr_to_trend_proxy": 0.05469037444048291,
       "corr_to_tidspilen": null
     },
     "twins_comparison": {
-      "primary_sharpe": -4.551089327764783,
+      "primary_sharpe": -2.283366958200809,
       "per_twin": {
         "momentum": {
-          "twin_sharpe": -1.2564991622328687,
+          "twin_sharpe": -0.8375426276833845,
           "primary_beats_twin": false
         },
         "momentum_x_turnover": {
-          "twin_sharpe": -1.5017837063744175,
+          "twin_sharpe": -0.8182120946539997,
           "primary_beats_twin": false
         },
         "lag1_signed_volume_corr": {
-          "twin_sharpe": -1.7991559093265463,
+          "twin_sharpe": -0.902760179791746,
           "primary_beats_twin": false
         }
       },
@@ -1335,7 +1335,7 @@
         "window": 10,
         "bucket": "quintile",
         "transform": "sign",
-        "sharpe": -5.425224935469346,
+        "sharpe": -2.790015571058937,
         "n_obs": 1230,
         "avg_turnover": 1.5547561975298576,
         "is_primary": false
@@ -1345,7 +1345,7 @@
         "window": 10,
         "bucket": "decile",
         "transform": "sign",
-        "sharpe": -4.313813819267002,
+        "sharpe": -2.24932869991312,
         "n_obs": 1230,
         "avg_turnover": 1.7357363027311634,
         "is_primary": false
@@ -1355,7 +1355,7 @@
         "window": 10,
         "bucket": "quintile",
         "transform": "tanh",
-        "sharpe": -5.027895879800091,
+        "sharpe": -2.524834862798799,
         "n_obs": 1230,
         "avg_turnover": 1.554426398649481,
         "is_primary": false
@@ -1365,7 +1365,7 @@
         "window": 10,
         "bucket": "decile",
         "transform": "tanh",
-        "sharpe": -3.968652613003769,
+        "sharpe": -1.977177232348001,
         "n_obs": 1230,
         "avg_turnover": 1.7350622970741054,
         "is_primary": false
@@ -1375,7 +1375,7 @@
         "window": 15,
         "bucket": "quintile",
         "transform": "sign",
-        "sharpe": -5.231877309888874,
+        "sharpe": -2.5791876790766204,
         "n_obs": 1230,
         "avg_turnover": 1.4198288638709295,
         "is_primary": false
@@ -1385,7 +1385,7 @@
         "window": 15,
         "bucket": "decile",
         "transform": "sign",
-        "sharpe": -3.8911742615451352,
+        "sharpe": -1.9218014943198904,
         "n_obs": 1230,
         "avg_turnover": 1.6164979977858651,
         "is_primary": false
@@ -1395,7 +1395,7 @@
         "window": 15,
         "bucket": "quintile",
         "transform": "tanh",
-        "sharpe": -5.45461777359651,
+        "sharpe": -2.8466212537844053,
         "n_obs": 1230,
         "avg_turnover": 1.40795335314497,
         "is_primary": false
@@ -1405,7 +1405,7 @@
         "window": 15,
         "bucket": "decile",
         "transform": "tanh",
-        "sharpe": -4.418075437123152,
+        "sharpe": -2.2268408961310815,
         "n_obs": 1230,
         "avg_turnover": 1.604567400060553,
         "is_primary": false
@@ -1415,7 +1415,7 @@
         "window": 20,
         "bucket": "quintile",
         "transform": "sign",
-        "sharpe": -4.551089327764783,
+        "sharpe": -2.283366958200809,
         "n_obs": 1230,
         "avg_turnover": 1.3053402593254342,
         "is_primary": true
@@ -1425,7 +1425,7 @@
         "window": 20,
         "bucket": "decile",
         "transform": "sign",
-        "sharpe": -3.9112263353247227,
+        "sharpe": -1.9524973076071588,
         "n_obs": 1230,
         "avg_turnover": 1.5102321886526773,
         "is_primary": false
@@ -1435,7 +1435,7 @@
         "window": 20,
         "bucket": "quintile",
         "transform": "tanh",
-        "sharpe": -4.617334367777644,
+        "sharpe": -2.3226164972137355,
         "n_obs": 1230,
         "avg_turnover": 1.283845850089098,
         "is_primary": false
@@ -1445,7 +1445,7 @@
         "window": 20,
         "bucket": "decile",
         "transform": "tanh",
-        "sharpe": -3.7084301658155723,
+        "sharpe": -1.7884206445827213,
         "n_obs": 1230,
         "avg_turnover": 1.4936202079459113,
         "is_primary": false
@@ -1455,7 +1455,7 @@
         "window": 30,
         "bucket": "quintile",
         "transform": "sign",
-        "sharpe": -4.127719637286497,
+        "sharpe": -2.0561435901038068,
         "n_obs": 1230,
         "avg_turnover": 1.1347547028998368,
         "is_primary": false
@@ -1465,7 +1465,7 @@
         "window": 30,
         "bucket": "decile",
         "transform": "sign",
-        "sharpe": -3.4514078770566576,
+        "sharpe": -1.659588795237925,
         "n_obs": 1230,
         "avg_turnover": 1.3356551565695793,
         "is_primary": false
@@ -1475,7 +1475,7 @@
         "window": 30,
         "bucket": "quintile",
         "transform": "tanh",
-        "sharpe": -3.7497405357550613,
+        "sharpe": -1.9105658133988452,
         "n_obs": 1230,
         "avg_turnover": 1.1084554839248633,
         "is_primary": false
@@ -1485,7 +1485,7 @@
         "window": 30,
         "bucket": "decile",
         "transform": "tanh",
-        "sharpe": -3.401211819984793,
+        "sharpe": -1.6990142247300788,
         "n_obs": 1230,
         "avg_turnover": 1.3153143464179247,
         "is_primary": false
@@ -1495,7 +1495,7 @@
         "window": 40,
         "bucket": "quintile",
         "transform": "sign",
-        "sharpe": -3.515245502414919,
+        "sharpe": -1.7403488520144217,
         "n_obs": 1230,
         "avg_turnover": 1.012387565280738,
         "is_primary": false
@@ -1505,7 +1505,7 @@
         "window": 40,
         "bucket": "decile",
         "transform": "sign",
-        "sharpe": -3.067981178618907,
+        "sharpe": -1.4644417266787852,
         "n_obs": 1230,
         "avg_turnover": 1.2079544621053695,
         "is_primary": false
@@ -1515,7 +1515,7 @@
         "window": 40,
         "bucket": "quintile",
         "transform": "tanh",
-        "sharpe": -3.402269508374557,
+        "sharpe": -1.7199843132987434,
         "n_obs": 1230,
         "avg_turnover": 0.982810629060791,
         "is_primary": false
@@ -1525,78 +1525,78 @@
         "window": 40,
         "bucket": "decile",
         "transform": "tanh",
-        "sharpe": -3.2577932469986197,
+        "sharpe": -1.7063198556216443,
         "n_obs": 1230,
         "avg_turnover": 1.1782992990508523,
         "is_primary": false
       }
     ],
     "dsr_full": {
-      "dsr": 7.868973972318083e-154,
-      "z": -26.394758661266156,
-      "sr0": 0.19335708869202547,
+      "dsr": 3.501036531060377e-47,
+      "z": -14.379078416650058,
+      "sr0": 0.10367114370197254,
       "n_obs": 1230,
       "n_trials": 20,
-      "var_sr": 0.010348786178997094
+      "var_sr": 0.0029749864802478244
     },
     "dsr_oos": {
-      "dsr": 1.0233767348551852e-56,
-      "z": -15.826375942507156,
-      "sr0": 0.19657762234954243,
+      "dsr": 3.137335044866229e-18,
+      "z": -8.627428566202878,
+      "sr0": 0.107383795224537,
       "n_obs": 447,
       "n_trials": 20,
-      "var_sr": 0.010696393533175476
+      "var_sr": 0.00319188117232556
     },
     "isolation": {
       "isolated": false,
-      "target_sharpe": -4.551089327764783,
+      "target_sharpe": -2.283366958200809,
       "n_neighbors": 6,
       "frac_positive_neighbors": 0.0,
       "threshold": 0.3
     },
     "bootstrap": {
-      "observed_sharpe": -4.551089327764783,
+      "observed_sharpe": -2.283366958200809,
       "p_value": 1.0,
       "n_boot": 1000,
       "block_size": 8.0,
-      "boot_sharpe_mean": -0.005051808350677916,
-      "boot_sharpe_std": 0.18954113055743463
+      "boot_sharpe_mean": -0.0054289757734941255,
+      "boot_sharpe_std": 0.18657252574701333
     },
-    "pead_delta_sharpe": 0.2772229718209971,
+    "pead_delta_sharpe": 0.17358830100519596,
     "pead_excluded_summary": {
       "n_obs": 1230,
-      "mean_period_return": -0.0018639223715074243,
-      "annualized_return": -0.09269049995080358,
-      "annualized_vol": 0.022678285946773045,
-      "sharpe": -4.2738663559437855,
-      "sortino": -3.5494237278304417,
-      "max_drawdown": -0.8999177896638298,
-      "skew": 1.2738244607331035,
-      "kurtosis": 26.531754767648962,
-      "hit_rate": 0.22113821138211381
+      "mean_period_return": -0.0009166142567007187,
+      "annualized_return": -0.04680958698535953,
+      "annualized_vol": 0.022591915595446325,
+      "sharpe": -2.109778657195613,
+      "sortino": -1.9628027568716562,
+      "max_drawdown": -0.6791363656185061,
+      "skew": 1.3094152916499178,
+      "kurtosis": 27.06808182844299,
+      "hit_rate": 0.35040650406504065
     },
     "concentration": {
-      "share": -0.010736940934391363,
+      "share": -0.02824834378263062,
       "window": 8,
-      "total_pnl": -2.245577667359721,
-      "max_window_pnl": 0.024110634778029664,
+      "total_pnl": -1.1216797040805226,
+      "max_window_pnl": 0.031685593894865985,
       "max_window_end_date": "2004-08-13T00:00:00"
     },
     "sign_stability": {
       "by_subperiod": {
         "2003-08": {
           "n_obs": 313,
-          "mean_return": -0.0017810419085056532,
+          "mean_return": -0.0008822223672230706,
           "insufficient_data": false
         },
         "2009-13": {
           "n_obs": 261,
-          "mean_return": -0.0018486593173221064,
+          "mean_return": -0.0009187271360003893,
           "insufficient_data": false
         },
         "2014-17": {
           "n_obs": 209,
-          "mean_return": -0.0019163793616050354,
+          "mean_return": -0.0009878184289817272,
           "insufficient_data": false
         }
       },
@@ -1609,6 +1609,7 @@
     "reasons": {
       "dsr_oos_z_leq_threshold": true,
       "bootstrap_p_geq_threshold": true,
+      "shuffle_null_shows_no_excess_order_information": true,
       "twin_beats_primary": true,
       "pnl_concentration_gt_threshold": false,
       "subperiod_sign_unstable": false,
@@ -1618,30 +1619,30 @@
   "verdict": "REJECT (stage 1 kill: REJECT)",
   "log": [
     "[    0.0s] fetching 1166 tickers + SPY benchmark (2003-01-01 .. 2026-08-10)...",
-    "[  124.8s] panel built: 1163 names x 5940 trading days",
-    "[  124.9s] STAGE 1: computing primary signal + pre-registered null checks...",
-    "[  132.6s]   mean weekly IC = 0.0004, t = 0.31, n_weeks = 1206",
-    "[  170.2s]   shuffle null (block=1): 7.0% of sampled windows exceed their own null's 95th pct (n=300)",
-    "[  170.2s]   shuffle null (block=4): 4.3% of sampled windows exceed their own null's 95th pct (n=300)",
-    "[  170.2s]   STAGE 1 KILL: |t(IC)| < threshold, consistent with brief's own predicted failure mode (IC ~ 0)",
-    "[  170.2s] STAGE 2: full costed backtest (primary, execution variant, twins, benchmark)...",
-    "[  195.2s]   primary (monday_close): Sharpe=-4.551, n_weeks=1230",
-    "[  219.3s]   variant (monday_open): Sharpe=-4.064",
-    "[  249.9s]   twin[momentum]: Sharpe=-1.256",
-    "[  271.6s]   twin[momentum_x_turnover]: Sharpe=-1.502",
-    "[  297.9s]   twin[lag1_signed_volume_corr]: Sharpe=-1.799",
-    "[  298.1s]   beta to SPY = -0.013, corr to momentum-proxy = 0.054, corr to Tidspilen = N/A (no such strategy exists in this codebase)",
-    "[  298.1s]   beats_all_twins = False",
-    "[  298.1s] STAGE 3: robustness (grid/DSR/bootstrap/PEAD/sign-stability/concentration)...",
-    "[  779.0s]   grid: 20 cells run",
-    "[  779.0s]   DSR (full sample): z=-26.39, dsr=0.0000",
-    "[  779.0s]   DSR (OOS): z=-15.83, dsr=0.0000",
-    "[  779.0s]   neighborhood isolation: isolated=False, frac_positive_neighbors=0.0",
-    "[  779.7s]   block bootstrap: p=1.0000",
-    "[  798.9s]   PEAD-exclusion Sharpe delta: +0.277 (excl. Sharpe=-4.274)",
-    "[  798.9s]   PnL concentration (best 8wk window): -1.1%",
-    "[  798.9s]   sub-period sign stability: True",
-    "[  798.9s] FINAL VERDICT: REJECT (stage 1 kill: REJECT)",
-    "[  798.9s]   reasons: {'dsr_oos_z_leq_threshold': True, 'bootstrap_p_geq_threshold': True, 'twin_beats_primary': True, 'pnl_concentration_gt_threshold': False, 'subperiod_sign_unstable': False, 'pead_delta_sharpe_below_threshold': False}"
+    "[   30.9s] panel built: 1163 names x 5940 trading days",
+    "[   30.9s] STAGE 1: computing primary signal + pre-registered null checks...",
+    "[   38.3s]   mean weekly IC = 0.0004, t = 0.31, n_weeks = 1206",
+    "[   75.6s]   shuffle null (block=1): 8.0% of sampled windows exceed their own null's 95th pct (n=300)",
+    "[   75.6s]   shuffle null (block=4): 5.0% of sampled windows exceed their own null's 95th pct (n=300)",
+    "[   75.6s]   STAGE 1 KILL: |t(IC)| < threshold, consistent with brief's own predicted failure mode (IC ~ 0)",
+    "[   75.6s] STAGE 2: full costed backtest (primary, execution variant, twins, benchmark)...",
+    "[   94.0s]   primary (monday_close): Sharpe=-2.283, n_weeks=1230",
+    "[  112.0s]   variant (monday_open): Sharpe=-1.901",
+    "[  137.1s]   twin[momentum]: Sharpe=-0.838",
+    "[  158.7s]   twin[momentum_x_turnover]: Sharpe=-0.818",
+    "[  182.7s]   twin[lag1_signed_volume_corr]: Sharpe=-0.903",
+    "[  182.9s]   beta to SPY = -0.013, corr to momentum-proxy = 0.055, corr to Tidspilen = N/A (no such strategy exists in this codebase)",
+    "[  182.9s]   beats_all_twins = False",
+    "[  182.9s] STAGE 3: robustness (grid/DSR/bootstrap/PEAD/sign-stability/concentration)...",
+    "[  670.2s]   grid: 20 cells run",
+    "[  670.2s]   DSR (full sample): z=-14.38, dsr=0.0000",
+    "[  670.2s]   DSR (OOS): z=-8.63, dsr=0.0000",
+    "[  670.2s]   neighborhood isolation: isolated=False, frac_positive_neighbors=0.0",
+    "[  670.9s]   block bootstrap: p=1.0000",
+    "[  689.2s]   PEAD-exclusion Sharpe delta: +0.174 (excl. Sharpe=-2.110)",
+    "[  689.2s]   PnL concentration (best 8wk window): -2.8%",
+    "[  689.2s]   sub-period sign stability: True",
+    "[  689.2s] FINAL VERDICT: REJECT (stage 1 kill: REJECT)",
+    "[  689.2s]   reasons: {'dsr_oos_z_leq_threshold': True, 'bootstrap_p_geq_threshold': True, 'shuffle_null_shows_no_excess_order_information': True, 'twin_beats_primary': True, 'pnl_concentration_gt_threshold': False, 'subperiod_sign_unstable': False, 'pead_delta_sharpe_below_threshold': False}"
   ]
 }
