@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# local data cache (fetched from EODHD; regenerate via fetch_pilot_data.py)
+cepstral_metaorder/data_cache/*
+!cepstral_metaorder/data_cache/.gitkeep
+
+# models / logs from the existing DQN agent
+models/
+*.log

@@ -1,0 +1,18 @@
+# Existing DQN trading agent (agent.py, environment.py, factory.py, main.py, ...)
+numpy
+pandas
+scipy
+gym
+tensorflow
+scikit-learn
+optuna
+ta
+pandas_datareader
+pygame
+
+# cepstral_metaorder research module (see cepstral_metaorder/README.md)
+requests
+pyarrow
+
+# tests
+pytest

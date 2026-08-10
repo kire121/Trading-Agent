@@ -1,0 +1,129 @@
+{
+  "meta": {
+    "n_symbols": 78,
+    "symbols_excluded": [],
+    "intraday_start": "2024-11-01",
+    "intraday_end": "2025-06-30",
+    "eod_start": "2023-06-01",
+    "eod_end": "2025-07-05",
+    "generated_at": "2026-08-10T15:03:08.964607+00:00"
+  },
+  "universe": {
+    "n_symbols_with_signal": 78
+  },
+  "main_strategy_performance": {
+    "n": 163,
+    "total_return": -0.006519904307729196,
+    "annualized_return": -0.009919679527480645,
+    "annualized_vol": 0.01970575314189387,
+    "sharpe": -0.5033900230076306,
+    "max_drawdown": -0.016951015014319504,
+    "hit_rate": 0.36809815950920244,
+    "gross": {
+      "n": 163,
+      "total_return": 0.013176268873055674,
+      "annualized_return": 0.020431633355954944,
+      "annualized_vol": 0.019718027921965777,
+      "sharpe": 1.0361905073272675,
+      "max_drawdown": -0.008098267473935605,
+      "hit_rate": 0.4110429447852761
+    },
+    "avg_daily_turnover": 0.1003680981595092,
+    "avg_simultaneous_positions": 6.54601226993865,
+    "max_simultaneous_positions": 15
+  },
+  "twin_performance": {
+    "turnover_z": {
+      "n": 524,
+      "total_return": -0.08984398816751915,
+      "annualized_return": -0.04394787056135335,
+      "annualized_vol": 0.051348589416272954,
+      "sharpe": -0.8558729862095447,
+      "max_drawdown": -0.10092120999037724,
+      "hit_rate": 0.4751908396946565
+    },
+    "unmasked_flow": {
+      "n": 163,
+      "total_return": -0.0016683765949653262,
+      "annualized_return": -0.0025703537231186206,
+      "annualized_vol": 0.004729947859659243,
+      "sharpe": -0.543421153759567,
+      "max_drawdown": -0.004229848690045168,
+      "hit_rate": 0.24539877300613497
+    },
+    "reversal_5d": {
+      "n": 524,
+      "total_return": -0.20170699672379333,
+      "annualized_return": -0.10561910250062702,
+      "annualized_vol": 0.07364965487921858,
+      "sharpe": -1.43407464262849,
+      "max_drawdown": -0.22938225675674984,
+      "hit_rate": 0.38549618320610685
+    }
+  },
+  "twin_liveness": {
+    "turnover_z": {
+      "coverage": 0.9351145038167938,
+      "coverage_ok": true,
+      "score_std": 2.409941354207567,
+      "score_dispersion_ok": true,
+      "direction_sign_balance": 0.4520408163265306,
+      "direction_balance_ok": true,
+      "alive": true
+    },
+    "unmasked_flow": {
+      "coverage": 0.8313669970111688,
+      "coverage_ok": true,
+      "score_std": 0.47272945825061347,
+      "score_dispersion_ok": true,
+      "direction_sign_balance": 0.43746452223273413,
+      "direction_balance_ok": true,
+      "alive": true
+    },
+    "reversal_5d": {
+      "coverage": 0.9904580152671756,
+      "coverage_ok": true,
+      "score_std": 2.060425948210457,
+      "score_dispersion_ok": true,
+      "direction_sign_balance": 0.4475816412232597,
+      "direction_balance_ok": true,
+      "alive": true
+    }
+  },
+  "step0_existence": {
+    "n_sampled": 500,
+    "exceedance_fraction": 0.26,
+    "required_fraction": 0.15000000000000002,
+    "passed": true
+  },
+  "step0_breadth": {
+    "pc1_share": 0.07278111863988367,
+    "pc1_ok": true,
+    "median_real_dispersion": 0.4656478518933458,
+    "block_null_p95_dispersion": 0.5544826517024224,
+    "dispersion_ok": false,
+    "avg_simultaneous_positions": 6.54601226993865,
+    "min_required_positions": 50,
+    "positions_ok": false,
+    "passed": false
+  },
+  "step1": {
+    "nw": {
+      "mean": -0.0010575555004564679,
+      "se": 0.0006946113542699007,
+      "t_stat": -1.5225139841948803,
+      "n": 136
+    },
+    "n_days": 136,
+    "avg_cross_section": 76.58823529411765,
+    "passed": false
+  },
+  "step2": null,
+  "verdict": {
+    "rejected": true,
+    "reasons": [
+      "Step 0 breadth test failed: signal looks like a single common factor / no genuine dispersion."
+    ],
+    "stage_reached": "step0"
+  }
+}
