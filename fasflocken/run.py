@@ -80,6 +80,38 @@ def cmd_grid(args) -> None:
     print(result.results.sort_values("sharpe", ascending=False).to_string(index=False))
 
 
+def _save_full_results(output_dir, args, main_returns, grid, boot, delta_sr, oracle_ret, dsr, sign, isolation, verdict) -> None:
+    """Persist the `full` run's results to disk -- stdout-only meant this was
+    otherwise lost the moment the process exited, with no way to inspect the
+    81-cell grid breakdown after the fact.
+    """
+    import json
+    import os
+
+    os.makedirs(output_dir, exist_ok=True)
+    grid.results.to_csv(os.path.join(output_dir, "grid_results.csv"), index=False)
+    main_returns.to_csv(os.path.join(output_dir, "main_weekly_returns.csv"), header=["net_return"])
+
+    summary = {
+        "provider": args.provider,
+        "start": str(args.start),
+        "end": str(args.end),
+        "eval_start": str(args.eval_start) if args.eval_start else None,
+        "n_sectors": args.n_sectors,
+        "bootstrap_draws": args.bootstrap_draws,
+        "net_sharpe": annualized_sharpe(main_returns),
+        "bootstrap_p_value": boot.p_value,
+        "delta_sharpe_vs_twin": delta_sr,
+        "oracle_sharpe": annualized_sharpe(oracle_ret),
+        "dsr": dsr,
+        "sign_stability": sign,
+        "isolation": isolation,
+        "verdict": verdict,
+    }
+    with open(os.path.join(output_dir, "summary.json"), "w") as f:
+        json.dump(summary, f, indent=2, default=str)
+
+
 def cmd_full(args) -> None:
     sectors = tuple(list(GICS_SECTORS)[: args.n_sectors])
     provider = _build_provider(args)
@@ -126,6 +158,13 @@ def cmd_full(args) -> None:
     for reason, fired in verdict["reasons"].items():
         print(f"  [{'X' if fired else ' '}] {reason}")
     print("=" * 60)
+
+    if args.output_dir:
+        _save_full_results(
+            args.output_dir, args, main_returns, grid, boot, delta_sr, oracle_ret, dsr, sign, isolation, verdict
+        )
+        print(f"Results written to {args.output_dir}/")
+
     if args.provider == "synthetic":
         print(
             "Note: this is a synthetic-data smoke run, not a real backtest -- "
@@ -155,6 +194,10 @@ def _common_args_parser() -> argparse.ArgumentParser:
     common.add_argument("--max-workers", type=int, default=6, help="eodhd provider only; thread pool size for fan-out fetches")
     common.add_argument("--n-sectors", type=int, default=9, help="use the first N of the 11 GICS sectors (default 9, always-on)")
     common.add_argument("--bootstrap-draws", type=int, default=200)
+    common.add_argument(
+        "--output-dir", type=str, default=None,
+        help="`full` command only: write grid_results.csv, main_weekly_returns.csv, and summary.json here",
+    )
     common.add_argument("--verbose", action="store_true")
     return common
 
