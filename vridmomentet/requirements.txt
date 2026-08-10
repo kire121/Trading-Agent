@@ -1,0 +1,10 @@
+# Vridmomentet strategy module -- scoped requirements.
+# The rest of this repository (the DQN trading agent) has its own,
+# separate, undeclared dependency set (pygame, tensorflow, ta, gym, ...);
+# this file covers only the vridmomentet/ package.
+numpy>=2.0
+pandas>=2.2
+scipy>=1.13
+arch>=6.3
+requests>=2.31
+pytest>=8.0
