@@ -1,6 +1,6 @@
 # Efterskalvsklockan ("the aftershock clock")
 
-Se REPORT.md för resultat och verdikt.
+Se REPORT.md för resultat och verdikt (FÖRKASTAD).
 
 ## Hypotesen
 

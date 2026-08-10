@@ -1,0 +1,10 @@
+{
+  "oos_primary_sharpe": -0.3469534785657391,
+  "oos_t1_sharpe": -0.3343735206670314,
+  "oos_t1_total_return": -1.0999597983266227,
+  "oos_t2_sharpe": -0.2973525451149854,
+  "oos_t2_total_return": -0.760392213042234,
+  "oos_t3_sharpe": -0.40686244890280665,
+  "oos_t3_total_return": -0.7302486285979679,
+  "beats_t1_net_oos": false
+}
