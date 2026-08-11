@@ -3,7 +3,7 @@ Strategi: dummy_strategy
 Config-hash: 6dee68ee3e201df00cabcd8c099d64dccbeb27335de47a7bbfb3b19d8ba102f3
 Frozen config: results/dummy_strategy/config_frozen.yaml
 Seed (fast): 42
-Körd (UTC): 2026-08-11T08:30:52+00:00
+Körd (UTC): 2026-08-11T09:21:52+00:00
 
 [PASS] aggregate.avg_trade_return_pct = -0.241572 (referens: -0.241572)
 [PASS] aggregate.max_drawdown_pct = 19.030823 (referens: 19.030823)
@@ -16,9 +16,9 @@ Körd (UTC): 2026-08-11T08:30:52+00:00
 [PASS] data_window.data_start = 2020-01-01 (referens: 2020-01-01)
 [PASS] data_window.is_end = 2020-12-31 (referens: 2020-12-31)
 [PASS] data_window.oos_unlocked = False (referens: False)
-[PASS] fast_exit_steps[0] = 1 (referens: 1)
-[PASS] fast_exit_steps[1] = 3 (referens: 3)
-[PASS] fast_exit_steps[2] = 5 (referens: 5)
+[PASS] fast_exit_steps.0 = 1 (referens: 1)
+[PASS] fast_exit_steps.1 = 3 (referens: 3)
+[PASS] fast_exit_steps.2 = 5 (referens: 5)
 [PASS] per_step.1.aggregate.avg_trade_return_pct = -0.081986 (referens: -0.081986)
 [PASS] per_step.1.aggregate.max_drawdown_pct = 19.3305 (referens: 19.3305)
 [PASS] per_step.1.aggregate.num_trades = 129.0 (referens: 129.0)
@@ -75,7 +75,7 @@ Körd (UTC): 2026-08-11T08:30:52+00:00
 [PASS] per_step.5.per_twin.twin_b.win_rate_pct = 48.0 (referens: 48.0)
 [PASS] seed = 42 (referens: 42)
 [PASS] strategy_name = dummy_strategy (referens: dummy_strategy)
-[PASS] twins[0] = twin_a (referens: twin_a)
-[PASS] twins[1] = twin_b (referens: twin_b)
+[PASS] twins.0 = twin_a (referens: twin_a)
+[PASS] twins.1 = twin_b (referens: twin_b)
 
 Resultat: PASS (0 avvikelser av 72 nyckeltal)

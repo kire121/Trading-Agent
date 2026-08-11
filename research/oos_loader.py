@@ -1,14 +1,29 @@
 """Gemensam dataladdare med OOS-lås.
 
 All inläsning av marknadsdata för forskningspipelinen MÅSTE gå via
-``load_market_data()``. Den interna datakällan (``_default_synthetic_fetch``)
-är spärrad (``research.loader_guard``) och kan inte köras direkt utanför
-loaderns kontext.
+``load_market_data()``.
 
-OOS-låset vägrar ladda data där config-fältet ``data_end`` ligger efter
-config-fältet ``is_end``, om inte ``unlock_oos=True`` anges explicit. Varje
-upplåsning loggas med tidsstämpel och config-hash till
-``logs/oos_unlocks.jsonl``. Se docs/INSTRUKTION.md, avsnitt 2.
+Skyddet sker i två lager:
+
+1. **Auktoritativ kontroll (enforce_oos_gate).** Varje faktisk
+   datahämtning — ``_default_synthetic_fetch`` såväl som ett eventuellt
+   inbytt ``fetch_fn`` — ska anropa ``enforce_oos_gate()`` på exakt den
+   config den själv precis fått. Kontrollen gäller alltså alltid den
+   config som faktiskt når datakällan, inte bara den config som skickades
+   till den yttre wrappern. Detta gör att ett inbytt ``fetch_fn`` inte kan
+   kringgå låset genom att internt anropa datakällan med en annan,
+   okontrollerad config (se docs/INSTRUKTION.md, avsnitt 2).
+2. **Snabb förkontroll + kod-konvention (loader_guard).**
+   ``load_market_data()`` gör samma kontroll direkt (utan loggning) innan
+   den ens öppnar loader-kontexten, och den interna datakällan vägrar köra
+   utanför kontexten. Detta är en andra säkerhetsspärr och en
+   kod-konvention, inte en kryptografisk garanti — se den dokumenterade
+   begränsningen i docs/INSTRUKTION.md.
+
+Oavsett väg in: data efter config-fältet ``is_end`` vägras om inte
+``unlock_oos=True`` anges explicit till den faktiska hämtningen, och varje
+sådan upplåsning loggas med tidsstämpel och config-hash till
+``logs/oos_unlocks.jsonl``.
 """
 import datetime
 import json
@@ -19,7 +34,8 @@ from research.dates import parse_date
 from research.hashutil import compute_config_hash, stable_int
 from research.loader_guard import loader_context, require_loader_active
 
-DEFAULT_UNLOCK_LOG = Path("logs/oos_unlocks.jsonl")
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_UNLOCK_LOG = _REPO_ROOT / "logs" / "oos_unlocks.jsonl"
 
 
 class OOSLockError(RuntimeError):
@@ -27,6 +43,7 @@ class OOSLockError(RuntimeError):
 
 
 def _log_unlock(config: dict, data_end: datetime.date, is_end: datetime.date, log_path: Path) -> None:
+    log_path = Path(log_path)
     log_path.parent.mkdir(parents=True, exist_ok=True)
     entry = {
         "timestamp_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
@@ -36,13 +53,37 @@ def _log_unlock(config: dict, data_end: datetime.date, is_end: datetime.date, lo
         "is_end": is_end.isoformat(),
     }
     with open(log_path, "a", encoding="utf-8") as f:
-        f.write(json.dumps(entry, sort_keys=True, ensure_ascii=False) + "\n")
+        f.write(json.dumps(entry, sort_keys=True, ensure_ascii=False, allow_nan=False) + "\n")
 
 
-def _default_synthetic_fetch(config: dict, twin: str) -> list:
-    """Deterministisk, seed-styrd syntetisk kursserie. Får aldrig anropas
-    direkt — endast från load_market_data() via loader_context."""
+def _check_or_raise(config: dict, unlock_oos: bool):
+    data_end = parse_date(config["data_end"])
+    is_end = parse_date(config["is_end"])
+    if data_end > is_end and not unlock_oos:
+        raise OOSLockError(
+            f"Begärt data_end={data_end.isoformat()} ligger efter is_end="
+            f"{is_end.isoformat()} för '{config.get('strategy_name', '?')}'. "
+            "Ange --unlock-oos explicit för att låsa upp OOS-perioden."
+        )
+    return data_end, is_end
+
+
+def enforce_oos_gate(config: dict, unlock_oos: bool, log_path: Path = DEFAULT_UNLOCK_LOG) -> None:
+    """Ovillkorlig, loggande OOS-kontroll. MÅSTE anropas av varje verklig
+    datahämtning (även ett eget inbytt fetch_fn) direkt på den config den
+    faktiskt använder — se modul-docstringen."""
+    data_end, is_end = _check_or_raise(config, unlock_oos)
+    if data_end > is_end:
+        _log_unlock(config, data_end, is_end, log_path)
+
+
+def _default_synthetic_fetch(config: dict, twin: str, *, unlock_oos: bool, log_path: Path) -> list:
+    """Deterministisk, seed-styrd syntetisk kursserie. Kräver att den körs
+    inifrån loader-kontexten (require_loader_active) OCH gör sin egen
+    auktoritativa OOS-kontroll på den config den faktiskt fått — se
+    modul-docstringen om varför detta inte bara delegeras till anroparen."""
     require_loader_active()
+    enforce_oos_gate(config, unlock_oos, log_path)
 
     start = parse_date(config["data_start"])
     end = parse_date(config["data_end"])
@@ -66,23 +107,15 @@ def load_market_data(config: dict, *, twin: str, unlock_oos: bool = False,
                       fetch_fn=None, log_path: Path = DEFAULT_UNLOCK_LOG) -> list:
     """Gemensam inläsning av marknadsdata med OOS-lås.
 
-    config måste innehålla: data_start, data_end, is_end, seed,
-    strategy_name. fetch_fn kan bytas ut (t.ex. mot en verklig marknadskälla)
-    men anropas alltid från samma grind — OOS-kontrollen sker innan fetch_fn
-    ens körs.
-    """
-    data_end = parse_date(config["data_end"])
-    is_end = parse_date(config["is_end"])
+    config måste vara validerad/normaliserad (se research.configvalidate)
+    och innehålla: data_start, data_end, is_end, seed, strategy_name.
 
-    if data_end > is_end:
-        if not unlock_oos:
-            raise OOSLockError(
-                f"Begärt data_end={data_end.isoformat()} ligger efter is_end="
-                f"{is_end.isoformat()} för '{config.get('strategy_name', '?')}'. "
-                "Ange --unlock-oos explicit för att låsa upp OOS-perioden."
-            )
-        _log_unlock(config, data_end, is_end, Path(log_path))
+    fetch_fn kan bytas ut (t.ex. mot en verklig marknadskälla) men MÅSTE då
+    själv anropa enforce_oos_gate(config, unlock_oos, log_path) på den
+    config den faktiskt hämtar för — se modul-docstringen.
+    """
+    _check_or_raise(config, unlock_oos)  # snabb förkontroll, ingen loggning här
 
     fetch = fetch_fn or _default_synthetic_fetch
     with loader_context():
-        return fetch(config, twin)
+        return fetch(config, twin, unlock_oos=unlock_oos, log_path=log_path)

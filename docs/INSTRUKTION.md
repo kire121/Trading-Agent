@@ -35,15 +35,28 @@ All datainläsning i forskningspipelinen sker via en gemensam loader:
   `unlock_oos=True` programmatiskt) anges **explicit**.
 - Varje upplåsning loggas med tidsstämpel och config-hash till
   `logs/oos_unlocks.jsonl` (en JSON-rad per upplåsning).
-- **Ingen kod får kringgå loadern.** Den interna datakällan
-  (`research.oos_loader._default_synthetic_fetch`) är tekniskt spärrad via
-  `research.loader_guard`: den kan endast köras inifrån loaderns egen
-  kontext, aldrig genom ett direkt anrop utanför `load_market_data()`.
-  - **Begränsning, för öppenhets skull:** detta tekniska lås förhindrar att
-    *loaderns egna interna funktioner* anropas direkt förbi grinden. Det kan
-    inte hindra att någon skriver en helt ny, fristående datainläsning någon
-    annanstans i kodbasen. Kodgranskning vid varje PR/commit ansvarar för att
-    ny datainläsning alltid går via `load_market_data()`.
+- **Ingen kod får kringgå loadern.** Skyddet är byggt i två lager
+  (skärpt 2026-08-11 efter en adversariell granskning som hittade två
+  konkreta kringgåenden i den ursprungliga implementationen):
+  1. **Auktoritativ kontroll (`research.oos_loader.enforce_oos_gate`).**
+     Varje verklig datahämtning — den inbyggda syntetiska källan såväl som
+     ett eventuellt inbytt `fetch_fn` — MÅSTE anropa `enforce_oos_gate()` på
+     exakt den config den själv precis fått. Kontrollen gäller alltså
+     alltid den config som faktiskt når datakällan, inte bara den config
+     som skickades till den yttre wrappern. Detta stänger det tidigare hittade
+     hålet där ett inbytt `fetch_fn` kunde hämta en annan, okontrollerad
+     config utan att låset triggades.
+  2. **Kod-konvention (`research.loader_guard`).** Den interna datakällan
+     vägrar dessutom köra utanför loaderns egen kontext.
+  - **Kvarstående begränsning, för öppenhets skull:** lager 2 är en
+    kod-konvention, inte en kryptografisk garanti — kod som körs i samma
+    Python-process kan i princip importera och manipulera loaderns interna
+    tillstånd direkt. Det ändrar dock **inte** på lager 1: även då krävs
+    fortfarande ett explicit `unlock_oos=True` för att över huvud taget få
+    OOS-data, och det loggas precis som alla andra upplåsningar. Det som
+    inte går att stoppa på kodnivå är att någon skriver en helt ny,
+    fristående datainläsning som aldrig anropar `enforce_oos_gate()` alls —
+    det är kodgranskningens ansvar vid varje PR/commit.
 
 ## 3. Leveransschema per strategikörning
 

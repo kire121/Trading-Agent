@@ -11,7 +11,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import yaml  # noqa: E402
 
-from research.delivery import deliver  # noqa: E402
+from research.configvalidate import ConfigError, validate_and_normalize  # noqa: E402
+from research.delivery import DeliveryError, deliver  # noqa: E402
 from research.oos_loader import OOSLockError  # noqa: E402
 from research.pipeline import compute_results  # noqa: E402
 
@@ -26,7 +27,13 @@ def main():
     args = parser.parse_args()
 
     with open(args.config, "r", encoding="utf-8") as f:
-        config = yaml.safe_load(f)
+        raw_config = yaml.safe_load(f)
+
+    try:
+        config = validate_and_normalize(raw_config)
+    except ConfigError as e:
+        print(f"KONFIGURATIONSFEL: {e}", file=sys.stderr)
+        sys.exit(2)
 
     try:
         results = compute_results(config, unlock_oos=args.unlock_oos)
@@ -35,9 +42,13 @@ def main():
         sys.exit(2)
 
     strategy_dir = args.results_root / config["strategy_name"]
-    assertions = deliver(strategy_dir, config, results)
-    failed = [a for a in assertions if a["status"] == "FAIL"]
+    try:
+        assertions = deliver(strategy_dir, config, results)
+    except DeliveryError as e:
+        print(f"LEVERANSFEL: {e}", file=sys.stderr)
+        sys.exit(2)
 
+    failed = [a for a in assertions if a["status"] == "FAIL"]
     print(f"Levererat till {strategy_dir}/")
     for name in ("results.json", "assertions.jsonl", "config_frozen.yaml",
                  "config_frozen.sha256", "AVVIKELSER.md"):

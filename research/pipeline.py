@@ -6,6 +6,7 @@ alltså exakt samma kod som originalkörningen, inte en omskriven kopia.
 """
 import statistics
 
+from research.configvalidate import validate_and_normalize
 from research.dates import parse_date
 from research.hashutil import compute_config_hash
 from research.oos_loader import load_market_data
@@ -72,7 +73,12 @@ def _aggregate(metrics_list: list) -> dict:
 
 def compute_results(config: dict, *, unlock_oos: bool = False) -> dict:
     """Kör hela pipelinen för en konfiguration och returnerar resultatstrukturen
-    som motsvarar results.json. Deterministisk givet samma config (inkl. seed)."""
+    som motsvarar results.json. Deterministisk givet samma config (inkl. seed).
+
+    Validerar/normaliserar alltid configen själv (idempotent) — även om
+    anroparen redan gjort det — så att funktionen är säker att anropa direkt,
+    t.ex. från tester eller framtida kod, utan en rå KeyError/oändlig loop."""
+    config = validate_and_normalize(config)
     fast_exit_steps = config["fast_exit_steps"]
     twins = config["twins"]
 

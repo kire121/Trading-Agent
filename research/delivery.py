@@ -1,9 +1,14 @@
 """Leveransschema per strategikörning, se docs/INSTRUKTION.md avsnitt 3:
 
 - results.json
-- assertions.jsonl (allt loggas, inget filtreras bort)
+- assertions.jsonl (allt loggas, inget filtreras bort — även FAIL-fall)
 - config_frozen.yaml + config_frozen.sha256
 - AVVIKELSER.md (obligatorisk, "Inga avvikelser." måste stå explicit om tomt)
+
+deliver() beräknar assertions (ren funktion, ingen I/O) INNAN någon fil
+skrivs, och tar bort eventuella redan skrivna filer om något senare steg i
+just detta anrop misslyckas — en körning ska aldrig lämna en tyst, delvis
+leverans på disk.
 """
 import datetime
 import json
@@ -15,10 +20,17 @@ import yaml
 from research.hashutil import compute_config_hash
 
 
+class DeliveryError(RuntimeError):
+    """Höjs när en leverans avbryts — se meddelandet för vilka filer som städades bort."""
+
+
 def _flatten_numeric(prefix, value, out):
     if isinstance(value, dict):
         for k, v in value.items():
             _flatten_numeric(f"{prefix}.{k}" if prefix else str(k), v, out)
+    elif isinstance(value, list):
+        for i, v in enumerate(value):
+            _flatten_numeric(f"{prefix}[{i}]", v, out)
     elif isinstance(value, (int, float)) and not isinstance(value, bool):
         out[prefix] = value
 
@@ -27,7 +39,9 @@ def build_assertions(config: dict, results: dict) -> list:
     """Bygger den kompletta, ovillkorliga listan av assertions för en körning.
 
     Samtliga assertions nedan utvärderas och läggs till listan oavsett
-    PASS/FAIL — ingen får filtreras bort baserat på utfall.
+    PASS/FAIL — ingen får filtreras bort baserat på utfall. Om ett värde
+    saknas skrivs det som en explicit FAIL, aldrig genom att bara hoppa
+    över raden.
     """
     assertions = []
 
@@ -37,15 +51,17 @@ def build_assertions(config: dict, results: dict) -> list:
     add("config_hash_stämmer", results.get("config_hash") == compute_config_hash(config),
         results.get("config_hash"))
 
-    add("seed_är_fast_heltal", isinstance(config.get("seed"), int), config.get("seed"))
+    add("seed_är_fast_heltal", isinstance(config.get("seed"), int) and not isinstance(config.get("seed"), bool),
+        config.get("seed"))
 
     oos_unlocked = results.get("data_window", {}).get("oos_unlocked")
     add("oos_status_registrerad", oos_unlocked in (True, False), oos_unlocked)
 
     numeric_leaves = {}
-    _flatten_numeric("", results.get("per_step", {}), numeric_leaves)
-    has_nan = any(isinstance(v, float) and math.isnan(v) for v in numeric_leaves.values())
-    add("inga_nan_i_nyckeltal", not has_nan, len(numeric_leaves))
+    _flatten_numeric("", results, numeric_leaves)
+    bad = sorted(k for k, v in numeric_leaves.items()
+                 if isinstance(v, float) and (math.isnan(v) or math.isinf(v)))
+    add("inga_nan_eller_inf_i_nyckeltal", not bad, bad if bad else len(numeric_leaves))
 
     expected_twins = set(results.get("twins", []))
     for step in results.get("fast_exit_steps", []):
@@ -57,9 +73,12 @@ def build_assertions(config: dict, results: dict) -> list:
             metrics = per_twin.get(twin)
             add(f"resultat_finns:steg={step}:tvilling={twin}", metrics is not None,
                 metrics is not None)
-            if metrics is not None:
-                add(f"trades_utfördes:steg={step}:tvilling={twin}",
-                    metrics.get("num_trades", 0) > 0, metrics.get("num_trades"))
+            # Ingen villkorlig filtrering: skriv alltid trades_utfördes, som
+            # explicit FAIL (värde None) om metrics saknas, aldrig genom att
+            # bara utelämna raden.
+            add(f"trades_utfördes:steg={step}:tvilling={twin}",
+                metrics is not None and metrics.get("num_trades", 0) > 0,
+                metrics.get("num_trades") if metrics is not None else None)
 
     return assertions
 
@@ -85,14 +104,14 @@ def freeze_config(strategy_dir: Path, config: dict) -> str:
 
 def write_results_json(strategy_dir: Path, results: dict) -> None:
     with open(strategy_dir / "results.json", "w", encoding="utf-8") as f:
-        json.dump(results, f, indent=2, sort_keys=True, ensure_ascii=False)
+        json.dump(results, f, indent=2, sort_keys=True, ensure_ascii=False, allow_nan=False)
         f.write("\n")
 
 
 def write_assertions_jsonl(strategy_dir: Path, assertions: list) -> None:
     with open(strategy_dir / "assertions.jsonl", "w", encoding="utf-8") as f:
         for assertion in assertions:
-            f.write(json.dumps(assertion, sort_keys=True, ensure_ascii=False) + "\n")
+            f.write(json.dumps(assertion, sort_keys=True, ensure_ascii=False, allow_nan=False) + "\n")
 
 
 def write_avvikelser(strategy_dir: Path, deviations: list = None) -> None:
@@ -108,10 +127,33 @@ def write_avvikelser(strategy_dir: Path, deviations: list = None) -> None:
 
 
 def deliver(strategy_dir, config: dict, results: dict, deviations: list = None) -> list:
+    """Skriver hela leveransen. Beräknar assertions (ren funktion) innan
+    något skrivs. Om något skrivsteg misslyckas städas de filer som redan
+    skrevs i just detta anrop bort, och ett DeliveryError höjs — aldrig en
+    tyst, ofullständig leverans på disk."""
     strategy_dir = Path(strategy_dir)
-    freeze_config(strategy_dir, config)
-    write_results_json(strategy_dir, results)
     assertions = build_assertions(config, results)
-    write_assertions_jsonl(strategy_dir, assertions)
-    write_avvikelser(strategy_dir, deviations)
+
+    steps = [
+        ("config_frozen.yaml", lambda: freeze_config(strategy_dir, config)),
+        ("results.json", lambda: write_results_json(strategy_dir, results)),
+        ("assertions.jsonl", lambda: write_assertions_jsonl(strategy_dir, assertions)),
+        ("AVVIKELSER.md", lambda: write_avvikelser(strategy_dir, deviations)),
+    ]
+
+    written = []
+    try:
+        for name, step in steps:
+            step()
+            written.append(name)
+            if name == "config_frozen.yaml":
+                written.append("config_frozen.sha256")
+    except Exception as e:
+        for name in written:
+            (strategy_dir / name).unlink(missing_ok=True)
+        raise DeliveryError(
+            f"Leverans till {strategy_dir} avbröts pga fel ({e}); ofullständiga filer "
+            f"({', '.join(written) or 'inga'}) togs bort."
+        ) from e
+
     return assertions
