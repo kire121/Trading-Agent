@@ -1,0 +1,538 @@
+{
+  "all_steps_run_passed": false,
+  "config_hash": "03fc745fccdae9b10b6933b2a84015581951db22af0e8a3db9965e5a983c51bb",
+  "data_window": {
+    "is_end": "2026-06-30",
+    "is_start": "2004-01-01",
+    "oos_end": "2026-06-30",
+    "oos_start": "2010-01-01"
+  },
+  "fetch_report": {
+    "failed_tickers": [],
+    "n_failed": 0,
+    "n_requested": 40
+  },
+  "liveness_assertions": {},
+  "oos_ticker_list_sha256": "cf601d404e858cfa2fa151f24c9c00a5355e25e093f97b08b0a18fcdd5f57029",
+  "oos_unlocked_this_session": false,
+  "primary_cell": {
+    "c": 5,
+    "f": "tanh",
+    "hl_op": 63
+  },
+  "seed": 20260811,
+  "step_order": [
+    "steg_0a",
+    "steg_0b",
+    "steg_0c",
+    "steg_1",
+    "steg_2",
+    "steg_3",
+    "steg_4",
+    "steg_5",
+    "steg_6",
+    "steg_7"
+  ],
+  "steps": {
+    "steg_0a": {
+      "failed_tickers": [
+        "XLRE"
+      ],
+      "max_allowed_failed": 8,
+      "n_failed": 1,
+      "passed": true,
+      "per_ticker": {
+        "AGG": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 5725,
+          "passed": true,
+          "pit_start": "2003-09-26"
+        },
+        "DBC": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 5132,
+          "passed": true,
+          "pit_start": "2006-02-03"
+        },
+        "EEM": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 5841,
+          "passed": true,
+          "pit_start": "2003-04-11"
+        },
+        "EFA": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 6252,
+          "passed": true,
+          "pit_start": "2001-08-17"
+        },
+        "EMB": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 4659,
+          "passed": true,
+          "pit_start": "2007-12-19"
+        },
+        "FXE": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 5168,
+          "passed": true,
+          "pit_start": "2005-12-12"
+        },
+        "FXY": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 4875,
+          "passed": true,
+          "pit_start": "2007-02-13"
+        },
+        "HYG": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 4836,
+          "passed": true,
+          "pit_start": "2007-04-11"
+        },
+        "IEF": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 6020,
+          "passed": true,
+          "pit_start": "2002-07-26"
+        },
+        "IJH": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 6561,
+          "passed": true,
+          "pit_start": "2000-05-26"
+        },
+        "IWM": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 6561,
+          "passed": true,
+          "pit_start": "2000-05-26"
+        },
+        "IYT": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 5715,
+          "passed": true,
+          "pit_start": "2003-10-10"
+        },
+        "KRE": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 5036,
+          "passed": true,
+          "pit_start": "2006-06-22"
+        },
+        "LQD": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 6020,
+          "passed": true,
+          "pit_start": "2002-07-26"
+        },
+        "MUB": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 4731,
+          "passed": true,
+          "pit_start": "2007-09-10"
+        },
+        "QQQ": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 6869,
+          "passed": true,
+          "pit_start": "1999-03-10"
+        },
+        "SHY": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 6020,
+          "passed": true,
+          "pit_start": "2002-07-26"
+        },
+        "SMH": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 6576,
+          "passed": true,
+          "pit_start": "2000-05-05"
+        },
+        "SPY": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 8411,
+          "passed": true,
+          "pit_start": "1993-01-29"
+        },
+        "TIP": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 5676,
+          "passed": true,
+          "pit_start": "2003-12-05"
+        },
+        "TLT": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 6020,
+          "passed": true,
+          "pit_start": "2002-07-26"
+        },
+        "UUP": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 4870,
+          "passed": true,
+          "pit_start": "2007-02-20"
+        },
+        "VEA": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 4762,
+          "passed": true,
+          "pit_start": "2007-07-26"
+        },
+        "VNQ": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 5472,
+          "passed": true,
+          "pit_start": "2004-09-29"
+        },
+        "VTI": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 6307,
+          "passed": true,
+          "pit_start": "2001-05-31"
+        },
+        "VUG": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 5637,
+          "passed": true,
+          "pit_start": "2004-01-30"
+        },
+        "VWO": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 5360,
+          "passed": true,
+          "pit_start": "2005-03-10"
+        },
+        "XBI": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 5131,
+          "passed": true,
+          "pit_start": "2006-02-06"
+        },
+        "XLB": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 6921,
+          "passed": true,
+          "pit_start": "1998-12-22"
+        },
+        "XLC": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 2018,
+          "passed": true,
+          "pit_start": "2018-06-19"
+        },
+        "XLE": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 6921,
+          "passed": true,
+          "pit_start": "1998-12-22"
+        },
+        "XLF": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 6921,
+          "passed": true,
+          "pit_start": "1998-12-22"
+        },
+        "XLI": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 6920,
+          "passed": true,
+          "pit_start": "1998-12-22"
+        },
+        "XLK": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 6921,
+          "passed": true,
+          "pit_start": "1998-12-22"
+        },
+        "XLP": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 6921,
+          "passed": true,
+          "pit_start": "1998-12-22"
+        },
+        "XLRE": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.06779661016949153,
+          "n_trading_days": 2696,
+          "passed": false,
+          "pit_start": "2015-10-08"
+        },
+        "XLU": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 6921,
+          "passed": true,
+          "pit_start": "1998-12-22"
+        },
+        "XLV": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 6921,
+          "passed": true,
+          "pit_start": "1998-12-22"
+        },
+        "XLY": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 6921,
+          "passed": true,
+          "pit_start": "1998-12-22"
+        },
+        "XRT": {
+          "coverage": 1.0,
+          "max_year_zero_volume_frac": 0.0,
+          "n_trading_days": 5034,
+          "passed": true,
+          "pit_start": "2006-06-22"
+        }
+      }
+    },
+    "steg_0b": {
+      "median_pairwise_corr_tau_diagnostic": 0.20408288464296634,
+      "n_failed": 40,
+      "passed": false,
+      "per_ticker": {
+        "AGG": {
+          "frac_in_range": 0.6737303617099013,
+          "n_days": 5474,
+          "passed": false
+        },
+        "DBC": {
+          "frac_in_range": 0.7246465888137676,
+          "n_days": 4881,
+          "passed": false
+        },
+        "EEM": {
+          "frac_in_range": 0.8313059033989266,
+          "n_days": 5590,
+          "passed": false
+        },
+        "EFA": {
+          "frac_in_range": 0.8490251624729211,
+          "n_days": 6001,
+          "passed": false
+        },
+        "EMB": {
+          "frac_in_range": 0.61442503969154,
+          "n_days": 4409,
+          "passed": false
+        },
+        "FXE": {
+          "frac_in_range": 0.6455155582672362,
+          "n_days": 4917,
+          "passed": false
+        },
+        "FXY": {
+          "frac_in_range": 0.5659602076124568,
+          "n_days": 4624,
+          "passed": false
+        },
+        "HYG": {
+          "frac_in_range": 0.6471101417666303,
+          "n_days": 4585,
+          "passed": false
+        },
+        "IEF": {
+          "frac_in_range": 0.5959438377535101,
+          "n_days": 5769,
+          "passed": false
+        },
+        "IJH": {
+          "frac_in_range": 0.7334389857369256,
+          "n_days": 6310,
+          "passed": false
+        },
+        "IWM": {
+          "frac_in_range": 0.752931854199683,
+          "n_days": 6310,
+          "passed": false
+        },
+        "IYT": {
+          "frac_in_range": 0.7536603221083455,
+          "n_days": 5464,
+          "passed": false
+        },
+        "KRE": {
+          "frac_in_range": 0.8156739811912226,
+          "n_days": 4785,
+          "passed": false
+        },
+        "LQD": {
+          "frac_in_range": 0.7484832726642399,
+          "n_days": 5769,
+          "passed": false
+        },
+        "MUB": {
+          "frac_in_range": 0.6339285714285714,
+          "n_days": 4480,
+          "passed": false
+        },
+        "QQQ": {
+          "frac_in_range": 0.8934723481414325,
+          "n_days": 6618,
+          "passed": false
+        },
+        "SHY": {
+          "frac_in_range": 0.5241809672386896,
+          "n_days": 5769,
+          "passed": false
+        },
+        "SMH": {
+          "frac_in_range": 0.7353359683794466,
+          "n_days": 6325,
+          "passed": false
+        },
+        "SPY": {
+          "frac_in_range": 0.7263480392156862,
+          "n_days": 8160,
+          "passed": false
+        },
+        "TIP": {
+          "frac_in_range": 0.6696774193548387,
+          "n_days": 5425,
+          "passed": false
+        },
+        "TLT": {
+          "frac_in_range": 0.7431097243889756,
+          "n_days": 5769,
+          "passed": false
+        },
+        "UUP": {
+          "frac_in_range": 0.5937229437229438,
+          "n_days": 4620,
+          "passed": false
+        },
+        "VEA": {
+          "frac_in_range": 0.5932165816892042,
+          "n_days": 4511,
+          "passed": false
+        },
+        "VNQ": {
+          "frac_in_range": 0.820915533422716,
+          "n_days": 5221,
+          "passed": false
+        },
+        "VTI": {
+          "frac_in_range": 0.7582562747688243,
+          "n_days": 6056,
+          "passed": false
+        },
+        "VUG": {
+          "frac_in_range": 0.7475872308834447,
+          "n_days": 5388,
+          "passed": false
+        },
+        "VWO": {
+          "frac_in_range": 0.7191231160696809,
+          "n_days": 5109,
+          "passed": false
+        },
+        "XBI": {
+          "frac_in_range": 0.6694672131147541,
+          "n_days": 4880,
+          "passed": false
+        },
+        "XLB": {
+          "frac_in_range": 0.6488755622188905,
+          "n_days": 6670,
+          "passed": false
+        },
+        "XLC": {
+          "frac_in_range": 0.9060554612337295,
+          "n_days": 1767,
+          "passed": false
+        },
+        "XLE": {
+          "frac_in_range": 0.6826086956521739,
+          "n_days": 6670,
+          "passed": false
+        },
+        "XLF": {
+          "frac_in_range": 0.6853073463268365,
+          "n_days": 6670,
+          "passed": false
+        },
+        "XLI": {
+          "frac_in_range": 0.6371814092953523,
+          "n_days": 6670,
+          "passed": false
+        },
+        "XLK": {
+          "frac_in_range": 0.7611694152923538,
+          "n_days": 6670,
+          "passed": false
+        },
+        "XLP": {
+          "frac_in_range": 0.6326836581709145,
+          "n_days": 6670,
+          "passed": false
+        },
+        "XLRE": {
+          "frac_in_range": 0.5893660531697341,
+          "n_days": 2445,
+          "passed": false
+        },
+        "XLU": {
+          "frac_in_range": 0.7055472263868066,
+          "n_days": 6670,
+          "passed": false
+        },
+        "XLV": {
+          "frac_in_range": 0.6224887556221889,
+          "n_days": 6670,
+          "passed": false
+        },
+        "XLY": {
+          "frac_in_range": 0.612743628185907,
+          "n_days": 6670,
+          "passed": false
+        },
+        "XRT": {
+          "frac_in_range": 0.806060606060606,
+          "n_days": 4785,
+          "passed": false
+        }
+      }
+    }
+  },
+  "stopped_at": "steg_0b",
+  "strategy_name": "timglaset",
+  "us_ticker_list_sha256": "0792f63ab2e055f5ead458523ba99169bcfd89daaaafd105dbbb32278b1dbc8a"
+}

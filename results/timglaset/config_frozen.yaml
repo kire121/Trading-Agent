@@ -1,0 +1,107 @@
+# Fryst konfiguration — genererad 2026-08-11T14:09:51+00:00
+# Exakt ögonblicksbild av konfigurationen som kördes.
+# Ändra INTE denna fil i efterhand — kör om strategin med en ny config istället.
+adv_cost_lookback: 63
+grid:
+- c: 3
+  f: sign
+  hl_op: 21
+- c: 3
+  f: tanh
+  hl_op: 21
+- c: 3
+  f: clip2
+  hl_op: 21
+- c: 5
+  f: sign
+  hl_op: 21
+- c: 5
+  f: tanh
+  hl_op: 21
+- c: 5
+  f: clip2
+  hl_op: 21
+- c: 8
+  f: sign
+  hl_op: 21
+- c: 8
+  f: tanh
+  hl_op: 21
+- c: 8
+  f: clip2
+  hl_op: 21
+- c: 3
+  f: sign
+  hl_op: 63
+- c: 3
+  f: tanh
+  hl_op: 63
+- c: 3
+  f: clip2
+  hl_op: 63
+- c: 5
+  f: sign
+  hl_op: 63
+- c: 5
+  f: tanh
+  hl_op: 63
+- c: 5
+  f: clip2
+  hl_op: 63
+- c: 8
+  f: sign
+  hl_op: 63
+- c: 8
+  f: tanh
+  hl_op: 63
+- c: 8
+  f: clip2
+  hl_op: 63
+- c: 3
+  f: sign
+  hl_op: 126
+- c: 3
+  f: tanh
+  hl_op: 126
+- c: 3
+  f: clip2
+  hl_op: 126
+- c: 5
+  f: sign
+  hl_op: 126
+- c: 5
+  f: tanh
+  hl_op: 126
+- c: 5
+  f: clip2
+  hl_op: 126
+- c: 8
+  f: sign
+  hl_op: 126
+- c: 8
+  f: tanh
+  hl_op: 126
+- c: 8
+  f: clip2
+  hl_op: 126
+gross_cap: 2.0
+hac_lags: 8
+is_end: '2026-06-30'
+is_start: '2004-01-01'
+n_effective_surface_reads: 7
+oos_end: '2026-06-30'
+oos_start: '2010-01-01'
+oos_ticker_list_sha256: cf601d404e858cfa2fa151f24c9c00a5355e25e093f97b08b0a18fcdd5f57029
+portfolio_vol_target: 0.1
+primary_cell:
+  c: 5
+  f: tanh
+  hl_op: 63
+seed: 20260811
+signal_vol_ewma_span: 20
+steg5_bootstrap_block_weeks: 13
+steg5_bootstrap_n_draws: 2000
+strategy_name: timglaset
+t2_block_len: 21
+t2_n_draws: 200
+us_ticker_list_sha256: 0792f63ab2e055f5ead458523ba99169bcfd89daaaafd105dbbb32278b1dbc8a

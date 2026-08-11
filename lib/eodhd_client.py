@@ -224,6 +224,33 @@ def get_index_components(index_ticker: str, cache_dir: Optional[str] = None,
                         {"fmt": "json"}, cache_dir, env_var)
 
 
+def get_splits(ticker: str, exchange: str = "US", cache_dir: Optional[str] = None,
+                env_var: Optional[str] = None) -> pd.DataFrame:
+    """Historical stock/ETF splits: DataFrame with columns `date` (Timestamp,
+    the split's ex-date) and `ratio` (float, new/old shares -- e.g. 2.0 for
+    a 2-for-1 forward split).
+
+    NEW as of 2026-08-11 (added for research/timglaset, the first module in
+    this repo to need split-adjusted VOLUME rather than just split-adjusted
+    price): no prior strategy branch's EODHD client exposed a /splits
+    endpoint, because none of them used volume as a signal input.
+    get_eod()'s own `adjusted_close` already bakes in a price adjustment,
+    but it cannot be reused to derive a volume adjustment factor because it
+    conflates splits WITH dividend adjustments (both produce a jump in
+    adjusted_close/close); this endpoint returns pure split events only,
+    which is what a volume-share-count adjustment actually needs.
+    """
+    data = _get_cached("splits", f"{ticker}.{exchange}", f"splits/{ticker}.{exchange}",
+                        {"fmt": "json"}, cache_dir, env_var)
+    if not data:
+        return pd.DataFrame(columns=["date", "ratio"])
+    rows = []
+    for rec in data:
+        num, den = rec["split"].split("/")
+        rows.append({"date": pd.Timestamp(rec["date"]), "ratio": float(num) / float(den)})
+    return pd.DataFrame(rows).sort_values("date").reset_index(drop=True)
+
+
 def get_fundamental_field(ticker: str, filter_path: str, exchange: str = "US",
                            cache_dir: Optional[str] = None, env_var: Optional[str] = None) -> Any:
     """Ett enskilt fundamentals-fält, t.ex. filter_path='Highlights::MarketCapitalization'
