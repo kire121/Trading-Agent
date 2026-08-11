@@ -1,0 +1,132 @@
+{
+  "n_rows_5d": 40632,
+  "n_rows_4d": 8639,
+  "n_rows_total": 49366,
+  "fit_seconds": 5.615363836288452,
+  "n_scored_oof_rows": 48595,
+  "descriptive_is_performance": {
+    "runraden_full": {
+      "sharpe": -0.2533388360619347,
+      "max_dd": -0.564504600840789,
+      "n_weeks": 1744
+    },
+    "T1_additive_only": {
+      "sharpe": 0.4228282631859332,
+      "max_dd": -0.38797476771300154
+    },
+    "T2_reversal_1w": {
+      "sharpe": 0.2635888017727305,
+      "max_dd": -0.4482018497617264
+    },
+    "T3_tsmom_1w": {
+      "sharpe": -0.46876616834812324,
+      "max_dd": -0.9797309584216921
+    },
+    "T4_market_timing": {
+      "sharpe": 0.11424865919753933,
+      "max_dd": -0.6363657625518273
+    }
+  },
+  "K1a_redundancy_screen": {
+    "real_ic": -0.00012536960676172578,
+    "null_p95": -0.000686807685464005,
+    "null_mean": -0.008649742243131187,
+    "null_std": 0.005053387680756006,
+    "n_draws": 200,
+    "passed": true
+  },
+  "k1a_seconds": 1578.27481007576,
+  "K1b_common_factor_screen": {
+    "real_pc1_share": 0.14999032685584654,
+    "null_p95": 0.036028345882284686,
+    "anomalous_common_factor": true,
+    "sharpe_real": -0.2533388360619347,
+    "sharpe_t4": 0.11424865919753933,
+    "beats_t4": false,
+    "n_draws": 200,
+    "passed": false
+  },
+  "k1b_seconds": 6.292522668838501,
+  "K1c_ubiquity": {
+    "sign_consistency": {
+      "per_table": {
+        "5d": {
+          "n_top_cells": 8,
+          "sign_consistency": 0.5
+        },
+        "4d": {
+          "n_top_cells": 4,
+          "sign_consistency": 0.25
+        }
+      },
+      "passed": false
+    },
+    "leave_one_cell_out": {
+      "passed": false,
+      "max_single_cell_share": 10.29807053945045,
+      "full_ic": -0.00012536960676172578
+    },
+    "max_quarter_pnl_share": {
+      "passed": true,
+      "max_quarter_share": 0.17995519571203772,
+      "n_quarters": 135
+    },
+    "passed": false
+  },
+  "k1c_seconds": 0.5865769386291504,
+  "K2_incremental_value": {
+    "ic_additive": -0.0014512435008817866,
+    "ic_full": -0.001308253238022573,
+    "incremental_ic": 0.00014299026285921374,
+    "r2_additive": -0.004019332799504838,
+    "r2_full": -0.005417888995874032,
+    "incremental_r2": -0.001398556196369194,
+    "passed": true
+  },
+  "step0_passed": false,
+  "step1_passed": true,
+  "is_survives_to_step2": false,
+  "universe_n_tickers": 40,
+  "universe_tickers": [
+    "AGG.US",
+    "BND.US",
+    "DBC.US",
+    "DIA.US",
+    "EEM.US",
+    "EFA.US",
+    "EWJ.US",
+    "FXE.US",
+    "FXI.US",
+    "GLD.US",
+    "HYG.US",
+    "IEF.US",
+    "ITB.US",
+    "IWM.US",
+    "KRE.US",
+    "LQD.US",
+    "MDY.US",
+    "QQQ.US",
+    "SHY.US",
+    "SLV.US",
+    "SMH.US",
+    "SPY.US",
+    "TIP.US",
+    "TLT.US",
+    "UNG.US",
+    "USO.US",
+    "UUP.US",
+    "VGK.US",
+    "VNQ.US",
+    "XLB.US",
+    "XLC.US",
+    "XLE.US",
+    "XLF.US",
+    "XLI.US",
+    "XLK.US",
+    "XLP.US",
+    "XLRE.US",
+    "XLU.US",
+    "XLV.US",
+    "XLY.US"
+  ]
+}
