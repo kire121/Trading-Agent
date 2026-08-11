@@ -128,5 +128,6 @@
     "XLU.US",
     "XLV.US",
     "XLY.US"
-  ]
+  ],
+  "note": "K1b/K1c/descriptive_is_performance recomputed after the positions.py/metrics.py ISO-week-bucket grouping fix (see git history); K1a and K2 are unchanged from the original run since neither depends on positions.py."
 }
