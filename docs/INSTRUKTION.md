@@ -8,14 +8,21 @@ strategiforskning bedrivs i detta repo.
 inklistrad text eller annan kanal utanför git är inte giltiga och ska inte
 implementeras förrän de finns i en commit i denna fil.
 
-**Antagen:** 2026-08-11 · **Version:** 2.0 (konsoliderad till `lib/` på main)
+**Antagen:** 2026-08-11 · **Version:** 2.1 (Timglasets levande komponenter
+promoverade till `lib/`)
 
 > **Anmärkning om ursprung:** Version 1.0 av detta dokument var en
 > formalisering av en instruktion given i chatten den 2026-08-11 (ingen
 > separat bifogad fil kunde återfinnas i sessionen). Version 2.0 flyttar
 > infrastrukturen från `research/` (byggd på en feature-branch) till `lib/`
 > på main, och lägger till delade moduler extraherade från 11 strategi-
-> branches. Se avsnitt 7 för fullständig proveniens.
+> branches. Version 2.1 promoverar Timglasets (grav, `config_hash`
+> `03fc745f…`, branch `claude/strategy-spec-implementation-axn5co`, commit
+> `408c81f`) tre förregistrerade "levande komponenter oavsett utfall"
+> (spec §16) till `lib/`: klockmaskineriet (`opclock.py`), klockvals-
+> oraklets additiva komposition (`orakel.py::rearrangement_oracle_returns`)
+> och det centrala ytregistret (`registry.py` + `registry/ytor.jsonl`,
+> Y1-posten). Se avsnitt 7 för fullständig proveniens.
 
 ---
 
@@ -117,12 +124,15 @@ uppnå det — konsolideringen sker uteslutande genom kopiering till main.
 
 **Beroenden, medvetet uppdelat i två grupper:**
 - `lib.loader_guard` / `lib.hashutil` / `lib.dates` / `lib.oos_loader` /
-  `lib.pipeline` / `lib.delivery` / `lib.configvalidate` — **noll**
-  tredjepartsberoenden (bara Python-standardbiblioteket + PyYAML).
-- `lib.eodhd_client` / `lib.twins` / `lib.orakel` / `lib.bootstrap` /
-  `lib.metrics` — kräver `pandas`, `numpy`, `scipy`, `requests` (samt
-  valfritt `statsmodels`, bara för `metrics.newey_west_tstat`; lazy-
-  importerad så modulen fungerar utan den).
+  `lib.pipeline` / `lib.delivery` / `lib.configvalidate` / `lib.registry` —
+  **noll** tredjepartsberoenden (bara Python-standardbiblioteket + PyYAML;
+  `lib.registry` beror dessutom bara på `lib.hashutil`, alltså fortfarande
+  noll tredjepartsberoenden transitivt).
+- `lib.eodhd_client` / `lib.twins` / `lib.orakel` / `lib.opclock` /
+  `lib.bootstrap` / `lib.metrics` — kräver `pandas`, `numpy`, `scipy`,
+  `requests` (samt valfritt `statsmodels`, bara för
+  `metrics.newey_west_tstat`; lazy-importerad så modulen fungerar utan
+  den). `lib.opclock` specifikt behöver bara `pandas`/`numpy`.
 
 **Proveniensledger** (branch = `origin/claude/<namn>`, se `git log <branch>
 --oneline -- <path>` för fler detaljer per commit):
@@ -134,6 +144,9 @@ uppnå det — konsolideringen sker uteslutande genom kopiering till main.
 | `twins.py::quantile_map_to` | `smittotalet-portfolio-overlay-0bl1sh`, commit `a67df1b` | Enda implementationen av detta koncept i hela 11-branch-korpusen (bekräftat via repo-omfattande grep). Portad nästan verbatim. |
 | `twins.py::twin_is_alive` | `cepstral-metaorder-detection-b8nvwb`, commit `0edbc4a` | Genericerad (kolumnnamn som parametrar istället för hårdkodade `S_bar`/`D`). |
 | `orakel.py::rearrangement_oracle` | `smittotalet-portfolio-overlay-0bl1sh::oracle_g`, commit `a67df1b` | Generaliserad (parameternamn). Se avsnitt om "orakel"-begreppets dubbla betydelse nedan. |
+| `orakel.py::rearrangement_oracle_returns` | `strategy-spec-implementation-axn5co::research/timglaset/oracle.py::clock_oracle_test`, commit `408c81f` (additiv) + `smittotalet-portfolio-overlay-0bl1sh::backtest.py::oracle_cap_test`, commit `a67df1b` (multiplikativ, tidigare ej migrerad som fristående funktion) | `mode="additive"` (Timglaset: `target + rearrangement_oracle(values, target)`) och `mode="multiplicative"` (Smittotalet: `target * rearrangement_oracle(values, target)`, default) på samma primitiv. Policy-trösklarna (SR-ökningskrav m.m.) i respektive ursprunglig wrapper migrerades INTE — bara själva kompositionen. Regressionstest mot båda ursprungsformlerna i `tests/test_orakel.py::RearrangementOracleReturnsTests`. |
+| `opclock.py` (`compute_tau`, `compute_op_ewma`, `compute_raw_z`, `compute_signal`, `calendar_twin_tau`, `variance_clock_input`) | `strategy-spec-implementation-axn5co::research/timglaset/opclock.py`, commit `408c81f` | Generaliserad: parametern `volume` heter nu `activity` (godtycklig aktivitetsproxy — volym, realiserad varians, antal avslut, ...); Timglaset-specifika defaultvärden (`window=252`, `cap=5.0`, variansfönster `5`) borttagna ur signaturerna, konstanterna flyttas till anroparens egen config. Algoritmen och de tre kärnfunktionernas (`compute_tau`, `compute_op_ewma`, `compute_signal`) beteende är oförändrat — se `tests/test_opclock.py` (flyttad oförändrad i sak från `research/timglaset/tests/test_opclock.py`, samma toleranser). |
+| `registry.py` (`append_entry`, `validate_entry`, `read_entries`) + `registry/ytor.jsonl` | `strategy-spec-implementation-axn5co::research/timglaset/write_registry.py`, commit `408c81f` | Generaliserad: `write_y1`/`write_y2_if_consumed` (hårdkodade Timglaset-fält) ersatta av en generisk `append_entry(entry)` som tar hela registerposten som dict, plus schemavalidering (`validate_entry`, inkl. att `tickerlista_sha256` faktiskt matchar `lib.hashutil.compute_config_hash(sorted(tickers))`). `registry/ytor.jsonl` behålls på main med sin befintliga `Y1_timglaset_us40etf`-post oförändrad. **Backfill av övriga ~10 strategigrenars historiska ytläsningar in i registret är INTE gjord här** — separat uppgift. |
 | `bootstrap.py` (cirkulär) | `runraden-vecko-ordning-vvztim::nulls.py`, commit `a4e0d53` | Portad verbatim — enda implementationen vars egen docstring säger sig vara byggd för återanvändning. |
 | `bootstrap.py` (stationär) | Kod från `levy-area-price-volume-206p5s::stats.py`, commit `6259088`; algoritm (Politis & Romano 1994) från `oglegrinden-reversal-topology-2bey4d::stats.py`, commit `216ea37` | |
 | `bootstrap.py` (syntetiska serier) | `dammluckan-record-hazard-x2qjhq::nulls.py`, commit `c2cbcb5` | Generaliserad med `kind="circular"\|"stationary"`. |
@@ -184,4 +197,10 @@ Formdriftens moment-estimator-"tvillingar"; Oglegrindens
 `beats_all_twins`/twin-gate-regression; Family-B-metrikformlerna
 (se `metrics.py`-headern); alla projektspecifika `battery.py`/
 `robustness.py`-null-batterier (dammluckan, omori) som kör om en hel
-strategis egen backtest-pipeline på syntetiska paneler.
+strategis egen backtest-pipeline på syntetiska paneler; Timglasets egen
+`config.py` (universum, grid, alla numeriska golv), `twins.py`/`ladder.py`
+(fast-exit-stegen T0–T3), `data.py`, `scheduling.py`, `costs.py`,
+`oos_guard.py`, `write_registry.py`:s Timglaset-specifika anropslager samt
+`run_timglaset.py`/`build_report.py`/`build_pdf.py` — dessa är
+strategispecifik policy och orkestrering, inte generell maskinvara, och
+stannar kvar på `strategy-spec-implementation-axn5co` (commit `408c81f`).
