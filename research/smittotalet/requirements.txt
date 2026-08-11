@@ -1,0 +1,7 @@
+numpy
+pandas
+scipy
+statsmodels
+requests
+pyarrow
+pytest

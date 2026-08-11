@@ -1,0 +1,71 @@
+{
+  "gates": {
+    "1_oracle_cap": {
+      "base_sr": 0.571046073163753,
+      "oracle_sr": 2.292960359851465,
+      "increment": 1.721914286687712,
+      "passes": true
+    },
+    "2_base_engine_alpha": {
+      "is_sharpe": 0.5330209642908955,
+      "passes": true
+    },
+    "3_redundancy": {
+      "direct_r2": 0.07534471041556257,
+      "controls_r2": 0.4996169331517759,
+      "full_r2": 0.5029294522780994,
+      "delta_r2": 0.0033125191263234655,
+      "nw_t_r_hat": 2.0733355645649385,
+      "direct_kill": false,
+      "incremental_kill": true,
+      "killed": true
+    }
+  },
+  "config": {
+    "grid": [
+      {
+        "q": 90,
+        "tau": 10,
+        "kappa": 1
+      },
+      {
+        "q": 90,
+        "tau": 10,
+        "kappa": 2
+      },
+      {
+        "q": 90,
+        "tau": 21,
+        "kappa": 1
+      },
+      {
+        "q": 90,
+        "tau": 21,
+        "kappa": 2
+      },
+      {
+        "q": 95,
+        "tau": 10,
+        "kappa": 1
+      },
+      {
+        "q": 95,
+        "tau": 10,
+        "kappa": 2
+      },
+      {
+        "q": 95,
+        "tau": 21,
+        "kappa": 1
+      },
+      {
+        "q": 95,
+        "tau": 21,
+        "kappa": 2
+      }
+    ]
+  },
+  "k": 0.0004610853489187152,
+  "base_is_sharpe": 0.5330209642908955,
+  "verdict": "DOD (Steg 3: redundant med count-EWMA/GARCH-persistens)"
+}
