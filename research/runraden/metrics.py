@@ -27,18 +27,31 @@ def oof_r2(pred: pd.Series, target: pd.Series) -> float:
 
 def portfolio_weekly_returns(positions: pd.DataFrame, cost_bp: float = 0.0) -> pd.Series:
     """Aggregate per-(asset,week) `weight` * `next_week_return` into a single
-    portfolio weekly return series indexed by execution_date, net of a
-    simple one-way turnover cost in basis points."""
+    portfolio weekly return series, net of a simple one-way turnover cost in
+    basis points.
+
+    Grouped by the ISO calendar week of `t_signal` (not the raw
+    `execution_date`) so that an asset whose own execution_date drifts by a
+    day or two from its peers (e.g. one ETF missing a single trading day)
+    still lands in the same weekly portfolio bucket as everyone else, rather
+    than silently forming its own single-name "week". See positions.py's
+    module docstring for the matching rationale in position sizing itself.
+    """
     df = positions.copy()
+    iso = df["t_signal"].dt.isocalendar()
+    df["week_bucket"] = iso["year"].astype(str) + "-W" + iso["week"].astype(str).str.zfill(2)
+    bucket_date = df.groupby("week_bucket")["execution_date"].min()
+
     df["contrib"] = df["weight"] * df["next_week_return"]
-    gross_by_week = df.groupby("execution_date")["contrib"].sum()
+    gross_by_week = df.groupby("week_bucket")["contrib"].sum()
 
     df_sorted = df.sort_values(["asset", "execution_date"])
     df_sorted["prev_weight"] = df_sorted.groupby("asset")["weight"].shift(1).fillna(0.0)
     df_sorted["turnover"] = (df_sorted["weight"] - df_sorted["prev_weight"]).abs()
-    cost_by_week = df_sorted.groupby("execution_date")["turnover"].sum() * (cost_bp / 10000.0)
+    cost_by_week = df_sorted.groupby("week_bucket")["turnover"].sum() * (cost_bp / 10000.0)
 
     net = gross_by_week.sub(cost_by_week, fill_value=0.0)
+    net.index = bucket_date.reindex(net.index)
     return net.sort_index()
 
 
@@ -136,7 +149,7 @@ def deflated_sharpe_ratio(weekly_returns: pd.Series, n_trials: int,
     # with per-trial SR variance `var_sr_across_trials` (defaults to the single
     # observed trial's own SR variance -- a conservative, standard fallback).
     if var_sr_across_trials is None:
-        var_sr_across_trials = (1 - gamma3 * sr_weekly + (gamma4 - 1) / 4.0 * sr_weekly ** 2) / n
+        var_sr_across_trials = (1 - gamma3 * sr_weekly + (gamma4 - 1) / 4.0 * sr_weekly ** 2) / (n - 1)
     var_sr_across_trials = max(var_sr_across_trials, 1e-12)
     sr_std = np.sqrt(var_sr_across_trials)
 
@@ -150,7 +163,7 @@ def deflated_sharpe_ratio(weekly_returns: pd.Series, n_trials: int,
         )
     out["sr_benchmark_annual"] = sr_benchmark_weekly * np.sqrt(periods_per_year)
 
-    se_sr = np.sqrt(max((1 - gamma3 * sr_weekly + (gamma4 - 1) / 4.0 * sr_weekly ** 2) / n, 1e-12))
+    se_sr = np.sqrt(max((1 - gamma3 * sr_weekly + (gamma4 - 1) / 4.0 * sr_weekly ** 2) / (n - 1), 1e-12))
     z = (sr_weekly - sr_benchmark_weekly) / se_sr
     out["dsr"] = float(_norm_cdf(z))
     return out

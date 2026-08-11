@@ -24,6 +24,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+import config
 from shrinkage import cell_shrinkage
 
 MIN_TRAIN_OBS_MULTIPLIER = 5  # require >= 5 obs per regressor before a refit is usable
@@ -45,19 +46,22 @@ def ols_beta(X: np.ndarray, y: np.ndarray) -> np.ndarray:
 _ols_beta = ols_beta  # internal alias used throughout this module
 
 
-def month_end_refit_dates(start: pd.Timestamp, end: pd.Timestamp, burn_in_years: int) -> pd.DatetimeIndex:
+def month_end_refit_dates(start: pd.Timestamp, end: pd.Timestamp, burn_in_years: int,
+                           freq: str = config.REFIT_FREQ) -> pd.DatetimeIndex:
     burn_in_cutoff = start + pd.DateOffset(years=burn_in_years)
     if burn_in_cutoff > end:
         return pd.DatetimeIndex([])
-    return pd.date_range(burn_in_cutoff, end, freq="ME")
+    return pd.date_range(burn_in_cutoff, end, freq=freq)
 
 
 class WalkForwardAdditiveModel:
     """Expanding-window additive + EB-shrunk word-cell model for one word length."""
 
-    def __init__(self, word_len: int, kappa: float = 300.0, burn_in_years: int = 3):
+    def __init__(self, word_len: int, kappa: float = 300.0, burn_in_years: int = 3,
+                 refit_freq: str = config.REFIT_FREQ):
         self.word_len = word_len
         self.kappa = kappa
+        self.refit_freq = refit_freq
         self.burn_in_years = burn_in_years
         self.refit_dates: list[pd.Timestamp] = []
         self.betas: list[np.ndarray] = []
@@ -72,7 +76,7 @@ class WalkForwardAdditiveModel:
             return self
 
         start, end = df["t_target_end"].min(), df["t_target_end"].max()
-        candidate_dates = month_end_refit_dates(start, end, self.burn_in_years)
+        candidate_dates = month_end_refit_dates(start, end, self.burn_in_years, freq=self.refit_freq)
         if len(candidate_dates) == 0:
             return self
 

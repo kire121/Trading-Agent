@@ -19,6 +19,13 @@ exact formulas -- see README "Design choices & assumptions"):
     last week's held weight is carried forward.
   - Names with no valid signal this week (burn-in / <4-day / no refit yet)
     get a target weight of 0, subject to the same no-trade band.
+  - The joint cross-sectional scaling/capping/banding step groups rows by
+    the ISO calendar week of the *signal* date (t_signal), not by each
+    row's own literal `execution_date`. Individual assets can have slightly
+    different execution_date values within the same economic week (e.g. one
+    ETF missing a single trading day), and grouping by the raw date would
+    silently split such an asset into its own single-name "cross-section"
+    for that week, distorting its vol-target scaling and gross cap.
 """
 from __future__ import annotations
 
@@ -80,10 +87,13 @@ def build_positions(scored_panel: pd.DataFrame, target_vol: float, max_gross: fl
         np.nan,
     )
 
+    iso = df["t_signal"].dt.isocalendar()
+    df["week_bucket"] = iso["year"].astype(str) + "-W" + iso["week"].astype(str).str.zfill(2)
+
     held: dict[str, float] = {}
     weight_col = np.zeros(len(df))
 
-    for exec_date, week_rows in df.groupby("execution_date", sort=True):
+    for _bucket, week_rows in df.groupby("week_bucket", sort=True):
         idx = week_rows.index.to_numpy()
         assets = week_rows["asset"].to_numpy()
         x_raw = week_rows["x_raw"].to_numpy(dtype=float)

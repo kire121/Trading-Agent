@@ -192,7 +192,7 @@ def k1c_max_quarter_pnl_share(positions_real: pd.DataFrame, cost_bp: float) -> d
     total = q.sum()
     if total == 0 or np.isnan(total):
         return {"passed": False, "max_quarter_share": np.nan}
-    shares = (q / total) if total > 0 else (q / total)
+    shares = q / total
     max_share = float(shares.abs().max())
     passed = bool(max_share <= K1C_MAX_QUARTER_PNL_SHARE)
     return {"passed": passed, "max_quarter_share": max_share, "n_quarters": len(q)}

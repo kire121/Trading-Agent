@@ -16,6 +16,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+import config
+
 SIGN_UP = "+"
 SIGN_DOWN = "-"
 
@@ -117,11 +119,16 @@ def build_asset_week_panel(prices: dict[str, pd.Series]) -> pd.DataFrame:
         wt = wt.reset_index(drop=True)
         wt["asset"] = asset
         wt["t_signal"] = wt["last_date"]
-        # shift(-1) aligns week t with week t+1's outcome
-        wt["t_target_end"] = wt["last_date"].shift(-1)
-        wt["next_week_return"] = wt["week_return"].shift(-1)
-        wt["next_n_days"] = wt["n_days"].shift(-1)
-        wt["next_first_date"] = wt["first_date"].shift(-1)
+        # config.EXECUTION_LAG_WEEKS (=1) is both "weeks from signal to
+        # execution" and "holding period length" under this design (Friday
+        # close signal -> Monday close execution -> held one week): a single
+        # shift realises both, since execution and the held return period
+        # are the same next week.
+        lag = config.EXECUTION_LAG_WEEKS
+        wt["t_target_end"] = wt["last_date"].shift(-lag)
+        wt["next_week_return"] = wt["week_return"].shift(-lag)
+        wt["next_n_days"] = wt["n_days"].shift(-lag)
+        wt["next_first_date"] = wt["first_date"].shift(-lag)
         frames.append(wt)
     if not frames:
         return pd.DataFrame()

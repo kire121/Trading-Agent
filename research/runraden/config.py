@@ -118,7 +118,7 @@ assert len(set(oos_universe_flat())) == len(oos_universe_flat())
 # Estimation / hyperparameters
 # ---------------------------------------------------------------------------
 BURN_IN_YEARS = 3
-REFIT_FREQ = "M"  # monthly refit of the expanding-window additive model
+REFIT_FREQ = "ME"  # monthly refit of the expanding-window additive model (pandas month-end alias)
 EXECUTION_LAG_WEEKS = 1  # signal at Friday close of week t, executed Monday close of t+1
 
 # Primary (pre-registered) cell of the Step-2 grid.
