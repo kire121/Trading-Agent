@@ -1,0 +1,19 @@
+{"name": "config_hash_stämmer", "status": "PASS", "value": "6dee68ee3e201df00cabcd8c099d64dccbeb27335de47a7bbfb3b19d8ba102f3"}
+{"name": "seed_är_fast_heltal", "status": "PASS", "value": 42}
+{"name": "oos_status_registrerad", "status": "PASS", "value": false}
+{"name": "inga_nan_i_nyckeltal", "status": "PASS", "value": 54}
+{"name": "alla_tvillingar_representerade:steg=1", "status": "PASS", "value": ["twin_a", "twin_b"]}
+{"name": "resultat_finns:steg=1:tvilling=twin_a", "status": "PASS", "value": true}
+{"name": "trades_utfördes:steg=1:tvilling=twin_a", "status": "PASS", "value": 129}
+{"name": "resultat_finns:steg=1:tvilling=twin_b", "status": "PASS", "value": true}
+{"name": "trades_utfördes:steg=1:tvilling=twin_b", "status": "PASS", "value": 129}
+{"name": "alla_tvillingar_representerade:steg=3", "status": "PASS", "value": ["twin_a", "twin_b"]}
+{"name": "resultat_finns:steg=3:tvilling=twin_a", "status": "PASS", "value": true}
+{"name": "trades_utfördes:steg=3:tvilling=twin_a", "status": "PASS", "value": 43}
+{"name": "resultat_finns:steg=3:tvilling=twin_b", "status": "PASS", "value": true}
+{"name": "trades_utfördes:steg=3:tvilling=twin_b", "status": "PASS", "value": 43}
+{"name": "alla_tvillingar_representerade:steg=5", "status": "PASS", "value": ["twin_a", "twin_b"]}
+{"name": "resultat_finns:steg=5:tvilling=twin_a", "status": "PASS", "value": true}
+{"name": "trades_utfördes:steg=5:tvilling=twin_a", "status": "PASS", "value": 25}
+{"name": "resultat_finns:steg=5:tvilling=twin_b", "status": "PASS", "value": true}
+{"name": "trades_utfördes:steg=5:tvilling=twin_b", "status": "PASS", "value": 25}

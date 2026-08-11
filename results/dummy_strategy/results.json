@@ -1,0 +1,114 @@
+{
+  "aggregate": {
+    "avg_trade_return_pct": -0.241572,
+    "max_drawdown_pct": 19.030823,
+    "num_trades": 65.666667,
+    "sharpe_ratio": -0.103419,
+    "total_return_pct": -10.640807,
+    "win_rate_pct": 48.062016
+  },
+  "config_hash": "6dee68ee3e201df00cabcd8c099d64dccbeb27335de47a7bbfb3b19d8ba102f3",
+  "data_window": {
+    "data_end": "2020-06-30",
+    "data_start": "2020-01-01",
+    "is_end": "2020-12-31",
+    "oos_unlocked": false
+  },
+  "fast_exit_steps": [
+    1,
+    3,
+    5
+  ],
+  "per_step": {
+    "1": {
+      "aggregate": {
+        "avg_trade_return_pct": -0.081986,
+        "max_drawdown_pct": 19.3305,
+        "num_trades": 129.0,
+        "sharpe_ratio": -0.064238,
+        "total_return_pct": -10.846088,
+        "win_rate_pct": 48.83721
+      },
+      "per_twin": {
+        "twin_a": {
+          "avg_trade_return_pct": -0.120851,
+          "max_drawdown_pct": 24.682744,
+          "num_trades": 129,
+          "sharpe_ratio": -0.09323,
+          "total_return_pct": -15.368801,
+          "win_rate_pct": 50.387597
+        },
+        "twin_b": {
+          "avg_trade_return_pct": -0.043121,
+          "max_drawdown_pct": 13.978255,
+          "num_trades": 129,
+          "sharpe_ratio": -0.035246,
+          "total_return_pct": -6.323375,
+          "win_rate_pct": 47.286822
+        }
+      }
+    },
+    "3": {
+      "aggregate": {
+        "avg_trade_return_pct": -0.243746,
+        "max_drawdown_pct": 18.990375,
+        "num_trades": 43.0,
+        "sharpe_ratio": -0.105753,
+        "total_return_pct": -10.846088,
+        "win_rate_pct": 45.348837
+      },
+      "per_twin": {
+        "twin_a": {
+          "avg_trade_return_pct": -0.359484,
+          "max_drawdown_pct": 24.478095,
+          "num_trades": 43,
+          "sharpe_ratio": -0.152797,
+          "total_return_pct": -15.368801,
+          "win_rate_pct": 41.860465
+        },
+        "twin_b": {
+          "avg_trade_return_pct": -0.128007,
+          "max_drawdown_pct": 13.502655,
+          "num_trades": 43,
+          "sharpe_ratio": -0.058709,
+          "total_return_pct": -6.323375,
+          "win_rate_pct": 48.837209
+        }
+      }
+    },
+    "5": {
+      "aggregate": {
+        "avg_trade_return_pct": -0.398983,
+        "max_drawdown_pct": 18.771594,
+        "num_trades": 25.0,
+        "sharpe_ratio": -0.140265,
+        "total_return_pct": -10.230246,
+        "win_rate_pct": 50.0
+      },
+      "per_twin": {
+        "twin_a": {
+          "avg_trade_return_pct": -0.608965,
+          "max_drawdown_pct": 24.413206,
+          "num_trades": 25,
+          "sharpe_ratio": -0.201647,
+          "total_return_pct": -15.157327,
+          "win_rate_pct": 52.0
+        },
+        "twin_b": {
+          "avg_trade_return_pct": -0.189001,
+          "max_drawdown_pct": 13.129982,
+          "num_trades": 25,
+          "sharpe_ratio": -0.078883,
+          "total_return_pct": -5.303166,
+          "win_rate_pct": 48.0
+        }
+      }
+    }
+  },
+  "seed": 42,
+  "strategy_name": "dummy_strategy",
+  "twins": [
+    "twin_a",
+    "twin_b"
+  ]
+}
