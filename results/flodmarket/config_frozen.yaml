@@ -1,0 +1,76 @@
+# Fryst konfiguration — genererad 2026-08-11T21:34:11+00:00
+# Exakt ögonblicksbild av konfigurationen som kördes.
+# Ändra INTE denna fil i efterhand — kör om strategin med en ny config istället.
+adv_cost_lookback: 63
+commission_bps: 3.0
+data_end: '2026-06-30'
+demean_grid:
+- none
+- 252
+fe_demean_window: 252
+gross_cap: 2.0
+is_end: '2026-06-30'
+is_start: '2004-01-01'
+is_universe:
+- AGG
+- DBC
+- EEM
+- EFA
+- EMB
+- FXE
+- FXY
+- HYG
+- IEF
+- IJH
+- IWM
+- IYT
+- KRE
+- LQD
+- MUB
+- QQQ
+- SHY
+- SMH
+- SPY
+- TIP
+- TLT
+- UUP
+- VEA
+- VNQ
+- VTI
+- VUG
+- VWO
+- XBI
+- XLB
+- XLC
+- XLE
+- XLF
+- XLI
+- XLK
+- XLP
+- XLRE
+- XLU
+- XLV
+- XLY
+- XRT
+is_universe_sha256_prefix: 0792f63ab2e0
+k_eff_min_fraction: 0.8
+k_grid:
+- 20
+- 40
+- 60
+k_primary: 40
+n_effective_surface_reads: 8
+oos_universe_sha256_prefix: cf601d404e85
+portfolio_vol_target: 0.1
+seed: 20260811
+selection_reading: 8
+signal_vol_lookback: 20
+strategy_name: flodmarket
+t3_block_days: 21
+t3_n_draws: 500
+t5_simplicity_tolerance: 0.05
+z_star_grid:
+- 1.5
+- 2.0
+- 3.0
+z_star_primary: 2.0

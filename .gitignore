@@ -1,2 +1,8 @@
 __pycache__/
 *.pyc
+.pytest_cache/
+
+# EODHD data is licensed and must never be committed (lib/eodhd_client.py
+# policy, docs/INSTRUKTION.md avsnitt 7).
+research/flodmarket/data_cache/
+logs/

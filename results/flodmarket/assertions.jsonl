@@ -1,0 +1,22 @@
+{"name": "config_hash_stämmer", "status": "PASS", "value": "b675173301970bc7d7f0baf08e745cd29dfb868bdc9bbc88163cba72d2689354"}
+{"name": "seed_är_fast_heltal", "status": "PASS", "value": 20260811}
+{"name": "oos_aldrig_upplåst", "status": "PASS", "value": false}
+{"name": "inga_oos_upplasningar_loggade", "status": "PASS", "value": "frånvarande"}
+{"name": "universum_sha256_prefix_matchar", "status": "PASS", "value": "0792f63ab2e0"}
+{"name": "oos_universum_sha256_prefix_matchar", "status": "PASS", "value": "cf601d404e85"}
+{"name": "inga_nan_eller_inf_i_resultat_toppniva", "status": "PASS", "value": 151}
+{"name": "steg0a_kill", "status": "PASS", "value": false}
+{"name": "steg0a_min_tickers_uppfyllt", "status": "PASS", "value": 40}
+{"name": "steg0b_null_kalibrering_theta0_pass", "status": "PASS", "value": 0.07}
+{"name": "steg0b_planterad_enkeltecken_pass", "status": "FAIL", "value": 0.03404452506173244}
+{"name": "steg0b_planterad_blandat_tecken_pass", "status": "FAIL", "value": -0.019698482735588378}
+{"name": "steg0b_ab_separation_helhet_pass", "status": "FAIL", "value": false}
+{"name": "steg0b_k0b3_kill", "status": "PASS", "value": false}
+{"name": "steg0b_k0b3_flag_redovisad", "status": "PASS", "value": true}
+{"name": "fast_exit_stopp_vid_steg0b_ab_separation", "status": "PASS", "value": "steg0b_ab_separation"}
+{"name": "steg1_kord_utom_ordning_men_ej_bindande_redovisad", "status": "PASS", "value": true}
+{"name": "steg1_K1.1_pooled_ic", "status": "FAIL", "value": -0.00210073011833105}
+{"name": "steg1_K1.2_nw_t", "status": "FAIL", "value": -0.8217512325310393}
+{"name": "steg1_K1.3_null_p95", "status": "FAIL", "value": 0.008420110080013777}
+{"name": "steg2_till_5_ej_körda", "status": "PASS", "value": "ej_körd (session-regel 4: avbröts vid Steg 0b)"}
+{"name": "tvilling_liveness_assertions_ej_tillämpliga", "status": "PASS", "value": "ej_körd — inga tvillingar byggdes (Steg 4 nåddes aldrig)"}

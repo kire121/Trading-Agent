@@ -1,0 +1,340 @@
+{
+  "config_hash": "b675173301970bc7d7f0baf08e745cd29dfb868bdc9bbc88163cba72d2689354",
+  "data_window": {
+    "data_end": "2026-06-30",
+    "is_end": "2026-06-30",
+    "is_start": "2004-01-01",
+    "oos_unlocked": false
+  },
+  "n_effective_surface_reads": 8,
+  "seed": 20260811,
+  "selection_reading": 8,
+  "steg0a": {
+    "excluded_ticker_years_synthetic_open": [],
+    "excluded_tickers_zero_range": [],
+    "kill": false,
+    "min_required_tickers": 25,
+    "n_tickers_total": 40,
+    "n_tradeable_tickers": 40,
+    "ticker_years_missing_bars_fail": [],
+    "ticker_years_preclamp_fail": [],
+    "tradeable_tickers": [
+      "AGG",
+      "DBC",
+      "EEM",
+      "EFA",
+      "EMB",
+      "FXE",
+      "FXY",
+      "HYG",
+      "IEF",
+      "IJH",
+      "IWM",
+      "IYT",
+      "KRE",
+      "LQD",
+      "MUB",
+      "QQQ",
+      "SHY",
+      "SMH",
+      "SPY",
+      "TIP",
+      "TLT",
+      "UUP",
+      "VEA",
+      "VNQ",
+      "VTI",
+      "VUG",
+      "VWO",
+      "XBI",
+      "XLB",
+      "XLC",
+      "XLE",
+      "XLF",
+      "XLI",
+      "XLK",
+      "XLP",
+      "XLRE",
+      "XLU",
+      "XLV",
+      "XLY",
+      "XRT"
+    ]
+  },
+  "steg0b": {
+    "ab_separation": {
+      "_elapsed_seconds": 450.85851287841797,
+      "null_calibration_theta0": {
+        "exceedance_rate": 0.07,
+        "mean_ic": 0.0004765158838181853,
+        "n_sims": 200,
+        "n_valid": 200,
+        "passes": true,
+        "target": 0.05,
+        "tolerance": 0.03
+      },
+      "passes": false,
+      "planted_mixed_sign": {
+        "exceeds_p95": false,
+        "ic_min_required": 0.02,
+        "mixed_sign": true,
+        "null_p95": 0.02800991968584135,
+        "null_p99": 0.0548564935335467,
+        "observed_ic": -0.019698482735588378,
+        "passes": false,
+        "theta": 0.01
+      },
+      "planted_single_sign": {
+        "exceeds_p95": true,
+        "ic_min_required": 0.02,
+        "mixed_sign": false,
+        "null_p95": 0.02985737289032791,
+        "null_p99": 0.03909466498374979,
+        "observed_ic": 0.03404452506173244,
+        "passes": false,
+        "theta": 0.02
+      },
+      "theta_calibration": {
+        "mixed_sign": {
+          "achieved_ic": 0.043417760904200874,
+          "grid": [
+            [
+              0.0005,
+              0.008690234137623713
+            ],
+            [
+              0.001,
+              0.009800096174979872
+            ],
+            [
+              0.002,
+              0.012588705256197302
+            ],
+            [
+              0.005,
+              0.02278405961274771
+            ],
+            [
+              0.01,
+              0.043417760904200874
+            ]
+          ],
+          "theta": 0.01
+        },
+        "single_sign": {
+          "achieved_ic": 0.04466105894024658,
+          "grid": [
+            [
+              0.0005,
+              -0.003926172082986984
+            ],
+            [
+              0.001,
+              -0.004342682114757766
+            ],
+            [
+              0.002,
+              -0.004863420435763205
+            ],
+            [
+              0.005,
+              -0.002957965810654659
+            ],
+            [
+              0.01,
+              0.009059283208808144
+            ],
+            [
+              0.02,
+              0.04466105894024658
+            ]
+          ],
+          "theta": 0.02
+        }
+      }
+    },
+    "real_checks": {
+      "extreme_frac_band": 0.0048000000000000004,
+      "floor_kill": false,
+      "k0b1_excluded_tickers": [],
+      "k0b2_excluded_tickers": [
+        "SHY",
+        "UUP"
+      ],
+      "k0b3_flag": true,
+      "k0b3_kill": false,
+      "kill": false,
+      "n_remaining_tickers": 38,
+      "nan_fraction_in_S": 0.1262709966405375,
+      "per_ticker_extreme_frac": {
+        "AGG": 0.0014139271827500884,
+        "DBC": 0.0011691348402182386,
+        "EEM": 0.0007069635913750442,
+        "EFA": 0.0005302226935312832,
+        "EMB": 0.004507405022537025,
+        "FXE": 0.0001934984520123839,
+        "FXY": 0.0010256410256410256,
+        "HYG": 0.003101736972704715,
+        "IEF": 0.0010604453870625664,
+        "IJH": 0.0008837044892188052,
+        "IWM": 0.0003534817956875221,
+        "IYT": 0.0017674089784376105,
+        "KRE": 0.0011914217633042098,
+        "LQD": 0.0008837044892188052,
+        "MUB": 0.0029592052420207146,
+        "QQQ": 0.0003534817956875221,
+        "SHY": 0.026511134676564158,
+        "SMH": 0.0012371862849063274,
+        "SPY": 0.0003534817956875221,
+        "TIP": 0.0012371862849063274,
+        "TLT": 0.00017674089784376105,
+        "UUP": 0.005544147843942505,
+        "VEA": 0.0,
+        "VNQ": 0.0005482456140350877,
+        "VTI": 0.0003534817956875221,
+        "VUG": 0.001951392584708178,
+        "VWO": 0.0009328358208955224,
+        "XBI": 0.001364256480218281,
+        "XLB": 0.0005302226935312832,
+        "XLC": 0.0,
+        "XLE": 0.0003534817956875221,
+        "XLF": 0.0008837044892188052,
+        "XLI": 0.0010604453870625664,
+        "XLK": 0.0010604453870625664,
+        "XLP": 0.0014139271827500884,
+        "XLRE": 0.00185459940652819,
+        "XLU": 0.0005302226935312832,
+        "XLV": 0.0012371862849063274,
+        "XLY": 0.0007069635913750442,
+        "XRT": 0.0011918951132300357
+      },
+      "per_ticker_std_s": {
+        "AGG": 0.3373016646613715,
+        "DBC": 0.3214743628243794,
+        "EEM": 0.31829726379822093,
+        "EFA": 0.31494115727096533,
+        "EMB": 0.34238047094755136,
+        "FXE": 0.32919983569545574,
+        "FXY": 0.3390120186911015,
+        "HYG": 0.3316135592023638,
+        "IEF": 0.3196564618194801,
+        "IJH": 0.3164969829835817,
+        "IWM": 0.31113076317708244,
+        "IYT": 0.34211691408360245,
+        "KRE": 0.32563438755220125,
+        "LQD": 0.33294292877022863,
+        "MUB": 0.35719395510266105,
+        "QQQ": 0.30960425517247775,
+        "SHY": 0.38714863255673987,
+        "SMH": 0.3295848790651095,
+        "SPY": 0.3089239446589334,
+        "TIP": 0.3192883844113942,
+        "TLT": 0.31240627810320126,
+        "UUP": 0.3361584980656128,
+        "VEA": 0.3182469685483952,
+        "VNQ": 0.32603551352864046,
+        "VTI": 0.31186618450952397,
+        "VUG": 0.3243117553763461,
+        "VWO": 0.3189279975398538,
+        "XBI": 0.3278170519150749,
+        "XLB": 0.3274089655917445,
+        "XLC": 0.32162591217286945,
+        "XLE": 0.3182377671005259,
+        "XLF": 0.32254663399497835,
+        "XLI": 0.3274134777557681,
+        "XLK": 0.32047974011842095,
+        "XLP": 0.33572962393802813,
+        "XLRE": 0.3277096841547778,
+        "XLU": 0.33161792778198024,
+        "XLV": 0.3361421908682343,
+        "XLY": 0.3202023311943262,
+        "XRT": 0.3271089974888077
+      },
+      "remaining_tickers": [
+        "AGG",
+        "DBC",
+        "EEM",
+        "EFA",
+        "EMB",
+        "FXE",
+        "FXY",
+        "HYG",
+        "IEF",
+        "IJH",
+        "IWM",
+        "IYT",
+        "KRE",
+        "LQD",
+        "MUB",
+        "QQQ",
+        "SMH",
+        "SPY",
+        "TIP",
+        "TLT",
+        "VEA",
+        "VNQ",
+        "VTI",
+        "VUG",
+        "VWO",
+        "XBI",
+        "XLB",
+        "XLC",
+        "XLE",
+        "XLF",
+        "XLI",
+        "XLK",
+        "XLP",
+        "XLRE",
+        "XLU",
+        "XLV",
+        "XLY",
+        "XRT"
+      ],
+      "std_s_band": [
+        0.16152853444582688,
+        0.6667898435817402
+      ]
+    },
+    "synthetic_bands": {
+      "extreme_frac_band": 0.0048000000000000004,
+      "n_synth_assets": 40,
+      "n_synth_days": 5000,
+      "q05_std_s": 0.32305706889165375,
+      "q95_std_s": 0.3333949217908701,
+      "q99_extreme_frac": 0.0016,
+      "seed": 20260811,
+      "std_s_high_band": 0.6667898435817402,
+      "std_s_low_band": 0.16152853444582688
+    }
+  },
+  "steg1_extra_ej_bindande": {
+    "K1.1_pooled_ic_ge_0.015": false,
+    "K1.2_nw_t_ge_2.5": false,
+    "K1.3_ic_gt_null_p95": false,
+    "_elapsed_seconds": 83.49554491043091,
+    "n_null_draws": 500,
+    "n_weekly_ic_obs": 1106,
+    "null_mean": 7.986737943605902e-05,
+    "null_p95": 0.008420110080013777,
+    "nw_t": -0.8217512325310393,
+    "observed_pooled_ic": -0.00210073011833105,
+    "passes": false
+  },
+  "steg2_steg3_steg4_steg5": null,
+  "strategy_name": "flodmarket",
+  "universe": {
+    "is_universe_sha256_prefix": "0792f63ab2e0",
+    "n_is_tickers": 40,
+    "oos_universe_sha256_prefix": "cf601d404e85"
+  },
+  "verdict": {
+    "oos_ucits_panel_ever_read": false,
+    "reason": "A/B-separationsdemonstrationen (spec SS9 Steg0b) fallerar: den planterade-effekt-kontrollen (bade enkel- och blandat-tecken-varianten) klarar inte kravet 'uppmätt IC >= 0.02 och > null-p99'. Se AVVIKELSER.md for fullstandig motivering, inklusive ordningsanmarkningen om att Steg 0a och Steg 1 kordes parallellt (bakgrunds-jobb) innan detta resultat var kant, och varfor Steg 1:s eget (starkt negativa) resultat pa riktig data ANDA redovisas har som extra, ej bindande kontext.",
+    "steg0a_passed": true,
+    "steg0b_ab_separation_passed": false,
+    "steg0b_k0b1_k0b2_k0b3_passed": true,
+    "steg1_would_have_passed": false,
+    "steg2_steg3_steg4_steg5_reached": false,
+    "stopped_at": "steg0b_ab_separation"
+  }
+}
