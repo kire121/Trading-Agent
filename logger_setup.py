@@ -336,7 +336,7 @@ def log_training_summary(episodes, env, agent, reward_history, sharpe_history, s
         
         # Kelly-specific statistics
         if kelly_trades:
-            stats_logger.info(f"\n--- KELLY TRADE STATISTICS ---")
+            stats_logger.info("\n--- KELLY TRADE STATISTICS ---")
             stats_logger.info(f"Kelly Trades: {len(kelly_trades)}")
             stats_logger.info(f"Kelly Win Rate: {kelly_win_rate:.4f}")
             kelly_profits = [t.get('profit_loss', 0) * 100 for t in kelly_trades if t.get('profit_loss', 0) > 0]
@@ -345,7 +345,7 @@ def log_training_summary(episodes, env, agent, reward_history, sharpe_history, s
             stats_logger.info(f"Kelly Average Loss: {np.mean(kelly_losses) if kelly_losses else 0:.2f}%")
         
         # Risk management statistics
-        stats_logger.info(f"\n--- RISK MANAGEMENT STATISTICS ---")
+        stats_logger.info("\n--- RISK MANAGEMENT STATISTICS ---")
         stats_logger.info(f"Stop-Loss Exits: {sl_exits} ({sl_exits/total_trades*100 if total_trades > 0 else 0:.2f}%)")
         stats_logger.info(f"Take-Profit Exits: {tp_exits} ({tp_exits/total_trades*100 if total_trades > 0 else 0:.2f}%)")
         stats_logger.info(f"Manual Exits: {manual_exits} ({manual_exits/total_trades*100 if total_trades > 0 else 0:.2f}%)")
