@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import yaml  # noqa: E402
 
 from lib.configvalidate import ConfigError, validate_and_normalize  # noqa: E402
-from lib.delivery import DeliveryError, deliver  # noqa: E402
+from lib.delivery import DeliveryError, current_branch, current_commit_sha, deliver  # noqa: E402
 from lib.oos_loader import OOSLockError  # noqa: E402
 from lib.pipeline import compute_results  # noqa: E402
 
@@ -43,7 +43,14 @@ def main():
 
     strategy_dir = args.results_root / config["strategy_name"]
     try:
-        assertions = deliver(strategy_dir, config, results)
+        commit_sha = current_commit_sha()
+        branch = current_branch()
+    except Exception as e:
+        print(f"LEVERANSFEL: kunde inte läsa commit-SHA/branch via git ({e}); "
+              "leveransen kräver ett rent git-arbetsträd.", file=sys.stderr)
+        sys.exit(2)
+    try:
+        assertions = deliver(strategy_dir, config, results, commit_sha=commit_sha, branch=branch)
     except DeliveryError as e:
         print(f"LEVERANSFEL: {e}", file=sys.stderr)
         sys.exit(2)

@@ -2,7 +2,11 @@
 # commit a3d3c4b (ursprunglig) + aa7355c (adversariell granskning/fixar: en assertion kunde
 # tidigare utelämnas tyst istället för att skrivas som FAIL; NaN/Inf-täckning utökad;
 # atomisk städning vid delvis misslyckad leverans tillagd). Flyttad till lib/ vid
-# lib-konsolideringen 2026-08-11.
+# lib-konsolideringen 2026-08-11. Skärpt vid Flodmärkets levande-komponenter-promovering
+# (docs/INSTRUKTION.md avsnitt 3/7): deliver() kräver nu commit_sha + branch som en HÅRD,
+# blockerande förutsättning (se "Leveranskvitto" nedan) -- Timglasets och Flodmärkets egna
+# leveranser (results/timglaset/, results/flodmarket/) saknade båda commit-SHA helt, och
+# fick backfyllas i efterhand. Det får inte kunna hända igen.
 """Leveransschema per strategikörning, se docs/INSTRUKTION.md avsnitt 3:
 
 - results.json
@@ -14,10 +18,30 @@ deliver() beräknar assertions (ren funktion, ingen I/O) INNAN någon fil
 skrivs, och tar bort eventuella redan skrivna filer om något senare steg i
 just detta anrop misslyckas — en körning ska aldrig lämna en tyst, delvis
 leverans på disk.
+
+**Leveranskvitto (commit_sha/branch).** deliver() kräver `commit_sha`
+(fullständig 40-tecken git-SHA) och `branch` som obligatoriska
+keyword-only-argument, och vägrar (DeliveryError, INNAN någon fil skrivs)
+om de saknas eller är felformaterade. De skrivs in i results.json under
+nyckeln "delivery". Detta är medvetet EXKLUDERAT från scripts/audit.py:s
+diff (se den filens `_flatten`) — commit-SHA/branch är leveransprovenance,
+inte en deterministisk utdata av lib.pipeline.compute_results, och kan
+därför aldrig reproduceras av en omkörning.
+
+Kända begränsning (dokumenterad, inte gömd): `current_commit_sha()`
+returnerar HEAD vid leveranstillfället, dvs. FÖRÄLDERN till den commit som
+faktiskt förseglar leveransen (kod+resultat) om de committas tillsammans
+— den förseglande commiten existerar per definition inte än när deliver()
+körs. Om ett projekt vill att kvittot ska självreferera sin egen
+förseglande commit krävs en liten, snabb uppföljningscommit som patchar in
+den SHA:n i efterhand (exakt det mönster som redan användes för att
+backfylla Timglasets och Flodmärkets saknade SHA:er).
 """
 import datetime
 import json
 import math
+import re
+import subprocess
 from pathlib import Path
 
 import yaml
@@ -27,6 +51,29 @@ from lib.hashutil import compute_config_hash
 
 class DeliveryError(RuntimeError):
     """Höjs när en leverans avbryts — se meddelandet för vilka filer som städades bort."""
+
+
+_COMMIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+
+
+def current_commit_sha(repo_root=None) -> str:
+    """`git rev-parse HEAD` för `repo_root` (default: aktuell arbetskatalog).
+    Se modulens header för den chicken-and-egg-begränsning som gäller för
+    VARJE anrop av denna funktion: den returnerar alltid en redan existerande
+    commit, aldrig den commit som eventuellt förseglar just detta anrops
+    egen leverans."""
+    result = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=repo_root, capture_output=True, text=True, check=True,
+    )
+    return result.stdout.strip()
+
+
+def current_branch(repo_root=None) -> str:
+    """`git rev-parse --abbrev-ref HEAD` för `repo_root`."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=repo_root, capture_output=True, text=True, check=True,
+    )
+    return result.stdout.strip()
 
 
 def _flatten_numeric(prefix, value, out):
@@ -61,6 +108,13 @@ def build_assertions(config: dict, results: dict) -> list:
 
     oos_unlocked = results.get("data_window", {}).get("oos_unlocked")
     add("oos_status_registrerad", oos_unlocked in (True, False), oos_unlocked)
+
+    delivery_meta = results.get("delivery", {})
+    commit_sha = delivery_meta.get("commit_sha")
+    branch = delivery_meta.get("branch")
+    add("leveranskvitto_har_commit_sha",
+        isinstance(commit_sha, str) and bool(_COMMIT_SHA_RE.match(commit_sha)), commit_sha)
+    add("leveranskvitto_har_branch", isinstance(branch, str) and bool(branch.strip()), branch)
 
     numeric_leaves = {}
     _flatten_numeric("", results, numeric_leaves)
@@ -131,11 +185,32 @@ def write_avvikelser(strategy_dir: Path, deviations: list = None) -> None:
                 f.write(f"- {deviation}\n")
 
 
-def deliver(strategy_dir, config: dict, results: dict, deviations: list = None) -> list:
+def deliver(strategy_dir, config: dict, results: dict, deviations: list = None, *,
+            commit_sha: str, branch: str) -> list:
     """Skriver hela leveransen. Beräknar assertions (ren funktion) innan
     något skrivs. Om något skrivsteg misslyckas städas de filer som redan
     skrevs i just detta anrop bort, och ett DeliveryError höjs — aldrig en
-    tyst, ofullständig leverans på disk."""
+    tyst, ofullständig leverans på disk.
+
+    `commit_sha`/`branch`: OBLIGATORISKA, keyword-only (se modulens
+    header, "Leveranskvitto"). HÅRT validerade INNAN något skrivs eller
+    ens assertions beräknas — en ogiltig/saknad SHA eller ett tomt
+    branch-namn avbryter leveransen omedelbart med DeliveryError, precis
+    som varje annat fel i skrivstegen nedan. Detta är den grind som
+    saknades när Timglasets och Flodmärkets leveranser skrevs (deras
+    commit-SHA:er fick backfyllas i efterhand i results/timglaset/ resp.
+    results/flodmarket/) — se `current_commit_sha`/`current_branch` för
+    hur anroparen normalt tar fram dessa värden."""
+    if not isinstance(branch, str) or not branch.strip():
+        raise DeliveryError(f"leverans kräver ett icke-tomt branch-namn, fick {branch!r}")
+    if not isinstance(commit_sha, str) or not _COMMIT_SHA_RE.match(commit_sha):
+        raise DeliveryError(
+            f"leverans kräver en fullständig 40-tecken commit-SHA (git rev-parse HEAD), "
+            f"fick {commit_sha!r} — Timglasets och Flodmärkets leveranser saknade detta "
+            f"fält helt (docs/INSTRUKTION.md avsnitt 3/7)."
+        )
+
+    results = {**results, "delivery": {"commit_sha": commit_sha, "branch": branch}}
     strategy_dir = Path(strategy_dir)
     assertions = build_assertions(config, results)
 

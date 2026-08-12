@@ -55,6 +55,13 @@ def _find_frozen_config(results_root: Path, config_hash: str):
 def _flatten(prefix, value, out):
     if isinstance(value, dict):
         for k, v in value.items():
+            if not prefix and k == "delivery":
+                # Leveransprovenance (commit_sha/branch, lib/delivery.py::deliver)
+                # -- INTE en deterministisk utdata av lib.pipeline.compute_results,
+                # kan därför aldrig reproduceras av en omkörning. Uteslut medvetet
+                # från diffen istället för att den skulle visa ett evigt FAIL/
+                # <saknas> för ett fält en omkörning per definition inte kan känna till.
+                continue
             _flatten(prefix + (k,), v, out)
     elif isinstance(value, list):
         for i, v in enumerate(value):

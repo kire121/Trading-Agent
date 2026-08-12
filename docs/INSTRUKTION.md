@@ -8,14 +8,22 @@ strategiforskning bedrivs i detta repo.
 inklistrad text eller annan kanal utanför git är inte giltiga och ska inte
 implementeras förrän de finns i en commit i denna fil.
 
-**Antagen:** 2026-08-11 · **Version:** 2.0 (konsoliderad till `lib/` på main)
+**Antagen:** 2026-08-11 · **Version:** 2.1 (Flodmärkets levande komponenter +
+registerkonsolidering)
 
 > **Anmärkning om ursprung:** Version 1.0 av detta dokument var en
 > formalisering av en instruktion given i chatten den 2026-08-11 (ingen
 > separat bifogad fil kunde återfinnas i sessionen). Version 2.0 flyttar
 > infrastrukturen från `research/` (byggd på en feature-branch) till `lib/`
 > på main, och lägger till delade moduler extraherade från 11 strategi-
-> branches. Se avsnitt 7 för fullständig proveniens.
+> branches. Version 2.1 (2026-08-12) konsoliderar `lib/registry.py` +
+> `registry/ytor.jsonl` till main (dessa fanns tidigare bara på den aldrig
+> sammanslagna branchen `claude/timglaset-levande-komponenter-g8v0j3`),
+> promoverar Flodmärkets tre förregistrerade levande komponenter
+> (`intrabar.py`, `synth_ohlc.py`, `ab_separation.py`) till `lib/`, och
+> skärper leveransschemat (avsnitt 3) med en obligatorisk commit-SHA +
+> branch-assertion i `lib/delivery.py`. Se avsnitt 7 för fullständig
+> proveniens.
 
 ---
 
@@ -70,6 +78,19 @@ Varje strategikörning ska producera följande under `results/<strategi>/`:
 | `config_frozen.yaml` + `config_frozen.sha256` | En fryst kopia av exakt den konfiguration som kördes, samt dess SHA256-hash (config-hash). |
 | `AVVIKELSER.md` | **Obligatorisk.** Om inga avvikelser förelåg ska filen explicit innehålla texten "Inga avvikelser." |
 
+**Leveranskvitto (version 2.1, tillagt efter att Timglasets och
+Flodmärkets egna leveranser båda visade sig sakna commit-SHA).**
+`lib.delivery.deliver()` kräver nu `commit_sha` (fullständig 40-tecken
+git-SHA, typiskt `git rev-parse HEAD`) och `branch` som obligatoriska
+argument, och vägrar HÅRT (avbryter innan någon fil skrivs) om de saknas
+eller är felformaterade. Värdena skrivs in i `results.json` under nyckeln
+`"delivery"`. Detta fält är medvetet undantaget från `scripts/audit.py`:s
+diff (avsnitt 4) — det är leveransprovenance, inte en deterministisk
+utdata av pipelinen, och kan därför aldrig reproduceras av en omkörning.
+Se `lib/delivery.py` för den fullständiga motiveringen, inklusive den
+dokumenterade chicken-and-egg-begränsningen (SHA:n avser HEAD vid
+leveranstillfället, dvs. föräldern till en eventuell förseglande commit).
+
 ## 4. Oberoende revision (`scripts/audit.py`)
 
 `scripts/audit.py` tar emot en config-hash (`--config-hash`), letar upp
@@ -78,6 +99,11 @@ motsvarande frysta konfiguration under `results/*/config_frozen.yaml`, kör om
 fast seed hämtad från den frysta konfigurationen) och diffar resultatet mot
 det committade `results.json`, nyckeltal för nyckeltal. Ett PASS/FAIL per
 nyckeltal skrivs till `results/<strategi>/audit_report.txt`.
+
+`results.json`:s toppnivånyckel `"delivery"` (commit_sha/branch, avsnitt 3,
+tillagd version 2.1) är medvetet undantagen från diffen — en omkörning av
+pipelinen kan per definition inte känna till vilken commit/branch den
+ursprungliga leveransen skedde från.
 
 ## 5. Definitioner och implementerade tolkningar
 
@@ -140,6 +166,10 @@ uppnå det — konsolideringen sker uteslutande genom kopiering till main.
 | `metrics.py` (Sharpe/Sortino/DSR m.fl.) | `oglegrinden-reversal-topology-2bey4d::stats.py`, commit `216ea37` | "Family A" (kurtosisterm `(kurtosis-1)/4`) — se den obligatoriska varningen i filens header om "Family B". |
 | `metrics.py::newey_west_tstat` | `dammluckan-record-hazard-x2qjhq::metrics.py`, commit `c2cbcb5` | |
 | `metrics.py::newey_west_tstat_nodeps` | `cepstral-metaorder-detection-b8nvwb::stats_utils.py`, commit `0edbc4a` | Oberoende, numpy-bara implementation av samma kvantitet — bevarad separat, inte en dubblett. |
+| `registry.py`, `registry/ytor.jsonl` (version 2.1) | `research/timglaset/write_registry.py` -> `lib/registry.py`, branch `claude/timglaset-levande-komponenter-g8v0j3`, commit `1b2a693` (i sin tur från `claude/strategy-spec-implementation-axn5co`, commit `408c81f`) | Fanns EJ på main innan version 2.1 (konsolideringscommiten `aca53d7` föregick promoveringscommiten `1b2a693`, som aldrig slogs ihop till main). Konsoliderad hit oförändrad. `registry/ytor.jsonl` förenar Y1 (Timglaset, samma branch) + Y8_flodmarket_us40etf (`claude/strategy-spec-implementation-qy84em`, commit `eca52d9`) till EN kanonisk fil — se `registry/ytor.jsonl` för båda posterna. Backfill av Y2–Y7 (historiska strategikörningars ytläsningar) är en SEPARAT, ännu ej utförd uppgift. |
+| `intrabar.py` (version 2.1) | `research/flodmarket/intrabar.py`, branch `claude/strategy-spec-implementation-qy84em`, commit `eca52d9` | Generaliserad (opclock.py-mönstret): Flodmärket-specifika defaultvärden (resultatkatalog, data-cache-katalog, FE-demean-fönster) borttagna ur signaturerna — anroparen skickar dem nu uttryckligen. |
+| `synth_ohlc.py` (version 2.1) | `research/flodmarket/synth.py`, branch `claude/strategy-spec-implementation-qy84em`, commit `eca52d9` | Döpt om (namnet "synth" är för generiskt för `lib/`). Ingen Flodmärket-specifik configkoppling att generalisera bort — algoritm/API oförändrat. |
+| `ab_separation.py` (version 2.1) | `research/flodmarket/ab_separation.py`, branch `claude/strategy-spec-implementation-qy84em`, commit `eca52d9` | Generaliserad (registry.py-mönstret): Flodmärkets hårdkodade estimator (`signal.py`/`nulls.py`, ej promoverade) ersatt av injicerade `estimator_fn`/`null_fn`. **Kraftkalibreringsfix, villkor för godkänd promovering:** originalet räknade en p99-tröskel (`null_p99`) från bara 50 nolldragningar (Flodmärkets deklarerade, reducerade A/B-separationsskala) — vid n=50 har en p99-skattning ett förväntat antal dragningar bortom tröskeln på 0,5, en icke-mätbar upplösning. Detta var den formella stoppunkten (Steg 0b) som fällde Flodmärket 2026-08-12 (`results/flodmarket/AVVIKELSER.md` avsnitt 8, `REPORT.md`) — men huruvida felslaget speglade en genuint underdimensionerad estimator eller bara en aldrig kontrollerad tröskelupplösning gick aldrig att avgöra. Modulen kräver nu `assert_percentile_resolution` (n_draws·(1−q) ≥ 5) för varje pXX-jämförelse, samt en `meta_achievability_check` (planterad θ vid batteriets faktiska skala, pass-sannolikhet ≥ 0,80 innan trösklar låses). Regressionstest: `tests/test_ab_separation.py::FlodmarketDeathRegressionTest` återskapar exakt 10×1200×50. |
 
 **EODHD-klienter — de dokumenterade skillnaderna.** Minst tre arkitektoniskt
 olika klientfamiljer fanns: (1) en tunn funktionsbaserad EOD/parquet-klient
@@ -184,4 +214,20 @@ Formdriftens moment-estimator-"tvillingar"; Oglegrindens
 `beats_all_twins`/twin-gate-regression; Family-B-metrikformlerna
 (se `metrics.py`-headern); alla projektspecifika `battery.py`/
 `robustness.py`-null-batterier (dammluckan, omori) som kör om en hel
-strategis egen backtest-pipeline på syntetiska paneler.
+strategis egen backtest-pipeline på syntetiska paneler; Flodmärkets
+`research/flodmarket/signal.py` (veckobeslutspipeline, tvillingkonstruktion
+T1–T5) och `nulls.py` (block-permutation, `block_permute_within_ticker`)
+— strategispecifikt hopkopplade mot Flodmärkets egen K/z*/tvillingval;
+`lib/ab_separation.py` tar istället emot en estimator/nolla som injicerade
+callables (se ovan), så ingen av dem behövde promoveras för att
+kraftkalibreringsfixen skulle kunna byggas in generellt.
+
+**Flodmärkets registerkonsolidering (version 2.1).** `research/flodmarket/
+registry.py` (en verbatim-kopia av `lib.registry`, tagen på strategibranchen
+`claude/strategy-spec-implementation-qy84em` eftersom `lib/registry.py` då
+inte fanns på main — se AVVIKELSER.md på den branchen, punkt 3) blir
+överflödig i och med denna konsolidering. Den filen och dess importväg är
+strategibranch-lokal och rörs INTE av detta main-arbete (gamla
+strategibranches ändras inte i efterhand, samma princip som ovan) — en
+separat, uttryckligen godkänd uppgift krävs för att ta bort den filen och
+peka om dess importer till `lib.registry` på den branchen.
