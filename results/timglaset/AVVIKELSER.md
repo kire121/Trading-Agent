@@ -14,3 +14,18 @@ Genererad: 2026-08-11T14:09:51+00:00
 - Metodologiskt fynd under testkonstruktion (test_7, tests/test_integration.py): T2:s block-permuterade nollhypotes visade sig i flera syntetiska konstruktioner (inkl. en med exakt matchande funktionsform kappa=-ln(phi) och tau-återhämtningsfidelitet 0.87) ligga nästan lika starkt som IC_op även när ett genuint klockberoende planterats. En separat direktdiagnostik bekräftade att shuffle-mekaniken FUNGERAR korrekt (corr(z_verklig, z_shufflad)~=0.71, inte 1.0, på en ren brusserie) -- fyndet är alltså inte en bugg utan en trolig egenskap hos denna estimatorklass: för en jämnt avklingande, alltid samma-tecken-persistens-signal kommer merparten av den självnormaliserade z-konstruktionens detektionsförmåga från rätt kalibrerad GENOMSNITTLIG avklingningstakt (kappa), inte från exakt dag-för-dag-klockjustering -- vilket är precis det blockpermutation lämnar orört (bevarar tau:s marginalfördelning exakt). Praktisk implikation: Steg 2:s IC_op-vs-T2-krav (p95 och 0,005-marginalen) kan visa sig vara ett genuint svårt villkor att klara även om ett riktigt klockberoende föreligger -- detta är en egenskap hos den förregistrerade testdesignen, inte en bugg i implementationen, och påverkar hur ett eventuellt Steg 2-fall bör tolkas.
 - Steg 0b-utfall verifierat, inte en bugg: körningen fällde samtliga 40 tickers på klocksanity (rullande 252d-medel av tau utanför [0.7,1.4] i mer än 5% av dagarna). Innan detta accepterades som resultat undersöktes om det var en implementationsbugg: (1) per-tickerns frac_in_range ligger på 0.57-0.85, inte gränsfall; (2) samma fällning kvarstår när nämnaren begränsas till enbart IS-fönstret 2004-2026 (t.ex. SPY 0.888, TLT 0.75), inte bara en artefakt av tickerns tidiga (pre-2004) historik; (3) grundorsaken är statistisk, inte kod: tau normaliseras mot sitt eget rullande MEDIANvärde (mean-reversion till ~1 förväntas för medianen per konstruktion), men Steg 0b:s kriterium testar det rullande MEDELVÄRDET -- och volymfördelningar är högerskeva (enstaka mycket volymstarka dagar: finanskrisen 2008, covid-kraschen 2020, opex/ombalanseringsdagar), vilket systematiskt drar upp ARITMETISKA medelvärdet över medianens ~1-nivå. Detta är precis det scenario specen själv namnger och förhandsregistrerar en dödsorsak för ('klockan ostationär', §8 Steg 0b) -- normaliserardefinitionen har därför INTE justerats i efterhand, per specens uttryckliga förbud.
 - Rå EODHD-data committas INTE till git (research/timglaset/data_cache/ är gitignored): detta följer den NYARE, uttryckligen dokumenterade policyn i lib/eodhd_client.py ('EODHD-data är licensierad -- committas ALDRIG till repot') snarare än den äldre per-gren-konventionen (smittotalet/omori/dammluckan committade sina CSV:er). docs/INSTRUKTION.md är daterat samma dag och är den nyare, kanoniska källan.
+
+## Retroaktiv backfill, 2026-08-12
+
+`results.json` saknade helt ett commit-SHA/branch-fält vid den ursprungliga
+leveransen (`lib/delivery.py` hade då inget sådant krav). Backfyllt i
+efterhand under nyckeln `"delivery"`: `commit_sha` =
+`408c81f4c95dd601996c22e1cf5853f67a8a172a`, `branch` =
+`claude/strategy-spec-implementation-axn5co` (den commit som faktiskt
+producerade denna leverans, "Implementera och kör Timglaset:
+volymsubordinerad trendklocka"). Detta var precis den saknade uppgiften
+som blev anledningen till att `lib.delivery.deliver()` numera kräver
+commit-SHA + branch som ett hårt, blockerande villkor (se
+`claude/flodmarket-levande-komponenter-ksn11a`, commit `378d238`, samt
+`docs/INSTRUKTION.md` avsnitt 3, version 2.1). Ingen annan del av
+leveransen ändrad.

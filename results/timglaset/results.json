@@ -7,6 +7,10 @@
     "oos_end": "2026-06-30",
     "oos_start": "2010-01-01"
   },
+  "delivery": {
+    "branch": "claude/strategy-spec-implementation-axn5co",
+    "commit_sha": "408c81f4c95dd601996c22e1cf5853f67a8a172a"
+  },
   "fetch_report": {
     "failed_tickers": [],
     "n_failed": 0,
