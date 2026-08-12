@@ -267,3 +267,24 @@ och 5 kördes ALDRIG. Kod som preliminärt skrevs för Steg 2
 med "bygg inte vidare". OOS-panelen (UCITS) lästes aldrig, i enlighet med
 session-regel 3 — `logs/oos_unlocks.jsonl` ska vara frånvarande/tom för
 denna körning.
+
+## Retroaktiva ändringar, 2026-08-12
+
+**`research/flodmarket/registry.py` borttagen.** Den filen var en
+verbatim-kopia av `lib.registry` (se punkt 3 ovan för varför den lades
+här och inte i `lib/`: `lib/registry.py` fanns bara på den då aldrig
+sammanslagna branchen `claude/timglaset-levande-komponenter-g8v0j3`).
+`lib/registry.py` + `registry/ytor.jsonl` (Y1 + Y8_flodmarket_us40etf
+förenade till en kanonisk fil) konsoliderades till main på
+`claude/flodmarket-levande-komponenter-ksn11a` (commit `378d238`,
+`docs/INSTRUKTION.md` avsnitt 7, version 2.1). Ett repo-omfattande
+`git grep` bekräftade att `research/flodmarket/registry.py` inte
+importerades någonstans i denna kodbas (varken av annan kod i
+`research/flodmarket/` eller av testsviten) — modulen var död kod redan
+innan borttagningen, så ingen importväg behövde omdirigeras i praktiken.
+Framtida kod som behöver registerappend ska importera `lib.registry`.
+
+**Commit-SHA/branch backfyllt i `results/flodmarket/results.json`** —
+se separat commit på denna branch för fullständig motivering (samma
+brist som föranledde `lib.delivery.deliver()`s nya hårda
+commit_sha/branch-krav).
