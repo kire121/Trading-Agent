@@ -284,7 +284,14 @@ importerades någonstans i denna kodbas (varken av annan kod i
 innan borttagningen, så ingen importväg behövde omdirigeras i praktiken.
 Framtida kod som behöver registerappend ska importera `lib.registry`.
 
-**Commit-SHA/branch backfyllt i `results/flodmarket/results.json`** —
-se separat commit på denna branch för fullständig motivering (samma
-brist som föranledde `lib.delivery.deliver()`s nya hårda
-commit_sha/branch-krav).
+**Commit-SHA/branch backfyllt i `results/flodmarket/results.json`.**
+`results.json` saknade helt ett commit-SHA/branch-fält (denna leverans
+gick via `research/flodmarket/assemble_delivery.py`, som aldrig hade ett
+sådant fält i sin resultatstruktur). Backfyllt under nyckeln
+`"delivery"`: `commit_sha` = `eca52d9e42ce949c35eb4c46894e6b17568f9cc2`,
+`branch` = `claude/strategy-spec-implementation-qy84em` (denna branch,
+"Implementera och kör Flodmärket: intradagsskuggasymmetri som
+flödesavtryck" — commiten som faktiskt producerade denna leverans).
+Exakt den brist som motiverade `lib.delivery.deliver()`s nya hårda
+commit_sha/branch-krav (`claude/flodmarket-levande-komponenter-ksn11a`,
+commit `378d238`). Ingen annan del av leveransen ändrad.

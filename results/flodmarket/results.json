@@ -6,6 +6,10 @@
     "is_start": "2004-01-01",
     "oos_unlocked": false
   },
+  "delivery": {
+    "branch": "claude/strategy-spec-implementation-qy84em",
+    "commit_sha": "eca52d9e42ce949c35eb4c46894e6b17568f9cc2"
+  },
   "n_effective_surface_reads": 8,
   "seed": 20260811,
   "selection_reading": 8,
