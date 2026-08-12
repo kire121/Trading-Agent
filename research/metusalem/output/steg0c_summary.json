@@ -1,0 +1,19 @@
+{
+  "bootstrap_b": 500,
+  "elapsed_seconds": 754.1147258281708,
+  "exp_criterion_pass": true,
+  "exp_falsepass_threshold": 10,
+  "lambda_range": [
+    0.025,
+    0.1
+  ],
+  "n_exp_mixture_falsepass_1a_1b": 0,
+  "n_instruments": 40,
+  "n_planted_pass_1a_1b": 100,
+  "n_sims": 100,
+  "n_weeks": 730,
+  "planted_criterion_pass": true,
+  "planted_pass_threshold": 90,
+  "planted_weibull_k": 0.7,
+  "steg0c_passed": true
+}

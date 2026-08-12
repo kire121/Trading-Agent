@@ -1,0 +1,41 @@
+# Fryst konfiguration — genererad 2026-08-12T09:45:13+00:00
+# Exakt ögonblicksbild av konfigurationen som kördes.
+# Ändra INTE denna fil i efterhand — kör om strategin med en ny config istället.
+cost_bps_is_primary: 5.0
+cost_bps_is_sensitivity:
+- 2.0
+- 5.0
+- 10.0
+cost_bps_oos: 10.0
+data_end: '2026-06-30'
+data_start: '2001-01-01'
+grid_cells:
+- - 0.25
+  - 1
+- - 0.25
+  - 2
+- - 0.5
+  - 1
+- - 0.5
+  - 2
+- - 0.75
+  - 1
+- - 0.75
+  - 2
+is_a_end: '2017-12-31'
+is_a_start: '2004-01-01'
+is_b_end: '2026-06-30'
+is_b_start: '2018-01-01'
+is_end: '2026-06-30'
+is_universe_sha256: 0792f63ab2e055f5ead458523ba99169bcfd89daaaafd105dbbb32278b1dbc8a
+n_effective_surface_reads: 9
+oos_universe_sha256: cf601d404e858cfa2fa151f24c9c00a5355e25e093f97b08b0a18fcdd5f57029
+primary_cell:
+- 0.5
+- 1
+seed: 20260812
+strategy_name: metusalem
+tb_n_draws_ic: 500
+tb_n_draws_portfolio: 200
+tb_redraw_weeks: 8
+warmup_weeks: 78

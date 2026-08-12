@@ -1,0 +1,5 @@
+{"name": "Steg0c_maskinerigrind:exp_criterion_pass", "status": "PASS", "value": true}
+{"name": "Steg0c_maskinerigrind:planted_criterion_pass", "status": "PASS", "value": true}
+{"name": "Steg0c_maskinerigrind:steg0c_passed", "status": "PASS", "value": true}
+{"name": "Steg0c_maskinerigrind:passed", "status": "PASS", "value": true}
+{"name": "Steg0a_panel_sanity:passed", "status": "FAIL", "value": false}
